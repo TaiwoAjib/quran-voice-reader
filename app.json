@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Qur'an Voice Reader",
+    "slug": "quran-voice-reader",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0F"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.quranvoicereader",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app uses your microphone to record voice samples and listen for voice commands while reading the Qur'an.",
+        "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to understand voice commands for hands-free Qur'an recitation control."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0A0F"
+      },
+      "package": "com.quranvoicereader",
+      "versionCode": 1,
+      "permissions": [
+        "RECORD_AUDIO",
+        "INTERNET",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Qur'an Voice Reader to access your microphone for voice training and commands."
+        }
+      ],
+      "expo-font"
+    ]
+  }
+}

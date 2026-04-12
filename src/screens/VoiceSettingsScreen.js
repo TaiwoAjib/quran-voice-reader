@@ -126,6 +126,7 @@ export default function VoiceSettingsScreen({ navigation }) {
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete', style: 'destructive', onPress: async () => {
+          if (!currentProfile) return;
           const uri = sampleUris[sampleIdx];
           if (uri) await deleteRecording(uri);
           const next = { ...sampleUris };

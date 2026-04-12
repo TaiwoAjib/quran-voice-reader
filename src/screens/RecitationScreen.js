@@ -49,6 +49,7 @@ export default function RecitationScreen({ route, navigation }) {
   const isPlayingRef = useRef(isPlaying);
   const currentAyahIndexRef = useRef(currentAyahIndex);
   const surahRef = useRef(surah);
+  const handleVoiceCommandRef = useRef(null);
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { currentAyahIndexRef.current = currentAyahIndex; }, [currentAyahIndex]);
   useEffect(() => { surahRef.current = surah; }, [surah]);
@@ -74,9 +75,15 @@ export default function RecitationScreen({ route, navigation }) {
   } = useVoiceRecorder();
 
   // ── Voice Commands ─────────────────────────────────────────────────────────
+  // Use a stable ref-forwarding wrapper so useVoiceCommands (empty-dep useEffect) always
+  // calls the latest version of handleVoiceCommand — same pattern as handleAyahFinishedRef.
+  const stableVoiceCommand = useCallback((cmd, rawText) => {
+    if (handleVoiceCommandRef.current) handleVoiceCommandRef.current(cmd, rawText);
+  }, []);
+
   const { isListening } = useVoiceCommands({
     enabled: voiceCommandsEnabled && mode === MODES.READING,
-    onCommand: handleVoiceCommand,
+    onCommand: stableVoiceCommand,
   });
 
   useEffect(() => {
@@ -240,7 +247,8 @@ export default function RecitationScreen({ route, navigation }) {
     }
   }, [isRecording, currentProfile, startRecording, stopRecording, saveRecording, updateProfileRecordings]);
 
-  function handleVoiceCommand(cmd, rawText) {
+  // Assign latest handleVoiceCommand to ref so stableVoiceCommand always calls current version
+  handleVoiceCommandRef.current = (cmd, rawText) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     if (typeof cmd === 'object' && cmd !== null) {
       if (cmd.type === 'NAVIGATE_SURAH') {
@@ -266,7 +274,7 @@ export default function RecitationScreen({ route, navigation }) {
       case 'NEXT_SURAH': handleNextSurah(); break;
       case 'START': handlePlayPause(); break;
     }
-  }
+  };
 
   const scrollToCurrentAyah = () => {
     const ref = ayahRefs.current[currentAyahIndex];
@@ -287,7 +295,7 @@ export default function RecitationScreen({ route, navigation }) {
   };
 
   const fontSizeMap = { small: { arabic: 26, trans: 13 }, medium: { arabic: 32, trans: 15 }, large: { arabic: 40, trans: 17 } };
-  const fs = fontSizeMap['medium'];
+  const fs = fontSizeMap[fontSize] || fontSizeMap['medium'];
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>

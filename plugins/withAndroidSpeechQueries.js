@@ -4,9 +4,23 @@
 // speech recognizer. Without this, Voice.start() fails silently and the voice
 // search never returns results. This plugin injects the required queries so the
 // fix survives `expo prebuild`.
-const { withAndroidManifest } = require('@expo/config-plugins');
+const { withAndroidManifest, withGradleProperties } = require('@expo/config-plugins');
+
+// Ensure Jetifier is on so @react-native-voice/voice's legacy com.android.support
+// dependency is rewritten to AndroidX (otherwise the release build fails with
+// duplicate androidx/support classes).
+function withJetifier(config) {
+  return withGradleProperties(config, (cfg) => {
+    const props = cfg.modResults;
+    const existing = props.find((p) => p.type === 'property' && p.key === 'android.enableJetifier');
+    if (existing) existing.value = 'true';
+    else props.push({ type: 'property', key: 'android.enableJetifier', value: 'true' });
+    return cfg;
+  });
+}
 
 module.exports = function withAndroidSpeechQueries(config) {
+  config = withJetifier(config);
   return withAndroidManifest(config, (cfg) => {
     const manifest = cfg.modResults.manifest;
 

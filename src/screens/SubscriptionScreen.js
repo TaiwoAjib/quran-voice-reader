@@ -6,6 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ARABIC_FONT } from '../components/Ornaments';
 
 const DONATION_AMOUNTS = [
   {
@@ -26,13 +27,13 @@ const DONATION_AMOUNTS = [
     arabicLabel: 'دَعْم',
     description: 'Help keep the app free',
     icon: 'heart-outline',
-    gradColors: ['#1E3A5F', '#152B47'],
-    borderColor: '#2563EB',
-    accentColor: '#60A5FA',
+    gradColors: ['#0F4636', '#0A2E23'],
+    borderColor: '#0E7C5A',
+    accentColor: '#D9B845',
     badge: 'POPULAR',
   },
   {
-    id: 'zakat',
+    id: 'generous',
     label: 'Generous',
     amount: '$10',
     arabicLabel: 'كَرَم',
@@ -49,9 +50,9 @@ const DONATION_AMOUNTS = [
     arabicLabel: 'رَاعٍ',
     description: 'Champion of this mission',
     icon: 'diamond-outline',
-    gradColors: ['#2D1B69', '#1E1048'],
-    borderColor: '#7C3AED',
-    accentColor: '#A78BFA',
+    gradColors: ['#3A2E08', '#2A2206'],
+    borderColor: '#9A7A1C',
+    accentColor: '#D9B845',
     badge: 'MOST IMPACT',
   },
 ];
@@ -118,13 +119,13 @@ export default function SubscriptionScreen({ navigation, route }) {
   const selected = DONATION_AMOUNTS.find(d => d.id === selectedId);
 
   return (
-    <LinearGradient colors={['#030712', '#060D1A', '#0A1628']} style={styles.container}>
+    <LinearGradient colors={['#04100B', '#081711', '#0C1F17']} style={styles.container}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleSkip} style={styles.closeBtn}>
             {fromOnboarding
               ? <Text style={styles.skipText}>Maybe later</Text>
-              : <Ionicons name="close" size={22} color="#6B8FB5" />
+              : <Ionicons name="close" size={22} color="#8FAF9D" />
             }
           </TouchableOpacity>
         </View>
@@ -167,8 +168,8 @@ export default function SubscriptionScreen({ navigation, route }) {
                   activeOpacity={0.85}
                   style={[
                     styles.donationCard,
-                    { borderColor: isSelected ? item.borderColor : '#1A2E4A' },
-                    isSelected && { backgroundColor: '#0D1829' },
+                    { borderColor: isSelected ? item.borderColor : '#1E3A2E' },
+                    isSelected && { backgroundColor: '#10241C' },
                   ]}
                 >
                   {item.badge && (
@@ -178,22 +179,22 @@ export default function SubscriptionScreen({ navigation, route }) {
                   )}
 
                   <LinearGradient
-                    colors={isSelected ? item.gradColors : ['#0D1829', '#060D1A']}
+                    colors={isSelected ? item.gradColors : ['#10241C', '#081711']}
                     style={styles.cardIconCircle}
                   >
-                    <Ionicons name={item.icon} size={22} color={isSelected ? item.accentColor : '#2E4A72'} />
+                    <Ionicons name={item.icon} size={22} color={isSelected ? item.accentColor : '#4E6B5C'} />
                   </LinearGradient>
 
-                  <Text style={[styles.cardAmount, { color: isSelected ? item.accentColor : '#6B8FB5' }]}>
+                  <Text style={[styles.cardAmount, { color: isSelected ? item.accentColor : '#8FAF9D' }]}>
                     {item.amount}
                   </Text>
-                  <Text style={[styles.cardArabic, { color: isSelected ? item.accentColor : '#2E4A72' }]}>
+                  <Text style={[styles.cardArabic, { color: isSelected ? item.accentColor : '#4E6B5C' }]}>
                     {item.arabicLabel}
                   </Text>
-                  <Text style={[styles.cardLabel, { color: isSelected ? '#DBEAFE' : '#6B8FB5' }]}>
+                  <Text style={[styles.cardLabel, { color: isSelected ? '#F0EAD6' : '#8FAF9D' }]}>
                     {item.label}
                   </Text>
-                  <Text style={[styles.cardDesc, { color: isSelected ? '#93BFEF' : '#2E4A72' }]}>
+                  <Text style={[styles.cardDesc, { color: isSelected ? '#C9BD8F' : '#4E6B5C' }]}>
                     {item.description}
                   </Text>
 
@@ -212,7 +213,7 @@ export default function SubscriptionScreen({ navigation, route }) {
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={donated ? ['#14532D', '#166534'] : (selected?.gradColors || ['#2563EB', '#1D4ED8'])}
+              colors={donated ? ['#14532D', '#166534'] : (selected?.gradColors || ['#0E7C5A', '#0A5C43'])}
               style={styles.ctaBtnGrad}
             >
               {donated ? (
@@ -239,7 +240,7 @@ export default function SubscriptionScreen({ navigation, route }) {
               { icon: 'heart-outline', text: 'For the Ummah' },
             ].map((item, i) => (
               <View key={i} style={styles.trustItem}>
-                <Ionicons name={item.icon} size={13} color="#2E4A72" />
+                <Ionicons name={item.icon} size={13} color="#4E6B5C" />
                 <Text style={styles.trustText}>{item.text}</Text>
               </View>
             ))}
@@ -257,30 +258,30 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
   closeBtn: { padding: 8 },
-  skipText: { color: '#2E4A72', fontSize: 14 },
+  skipText: { color: '#4E6B5C', fontSize: 14 },
   scroll: { paddingHorizontal: 16, paddingBottom: 20 },
 
   heroSection: { alignItems: 'center', paddingVertical: 28 },
   heroIcon: { fontSize: 52, marginBottom: 14 },
   heroTitle: {
-    fontSize: 26, fontWeight: '800', color: '#DBEAFE',
+    fontSize: 26, fontWeight: '800', color: '#F0EAD6',
     marginBottom: 10, textAlign: 'center', letterSpacing: 0.3,
   },
-  heroSubtitle: { fontSize: 14, color: '#6B8FB5', textAlign: 'center', lineHeight: 22 },
+  heroSubtitle: { fontSize: 14, color: '#8FAF9D', textAlign: 'center', lineHeight: 22 },
 
   quoteCard: {
-    backgroundColor: '#060D1A', borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: '#1A2E4A', marginBottom: 28, alignItems: 'center',
+    backgroundColor: '#081711', borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: '#1E3A2E', marginBottom: 28, alignItems: 'center',
   },
-  quoteArabic: { fontSize: 20, color: '#3B82F6', marginBottom: 10, textAlign: 'center', lineHeight: 32 },
-  quoteText: { fontSize: 14, color: '#93BFEF', textAlign: 'center', fontStyle: 'italic', lineHeight: 22, marginBottom: 6 },
-  quoteSource: { fontSize: 11, color: '#2E4A72', textAlign: 'center' },
+  quoteArabic: { fontSize: 20, color: '#C9A227', marginBottom: 10, textAlign: 'center', lineHeight: 34, fontFamily: ARABIC_FONT },
+  quoteText: { fontSize: 14, color: '#C9BD8F', textAlign: 'center', fontStyle: 'italic', lineHeight: 22, marginBottom: 6 },
+  quoteSource: { fontSize: 11, color: '#4E6B5C', textAlign: 'center' },
 
-  sectionLabel: { fontSize: 13, color: '#6B8FB5', fontWeight: '700', letterSpacing: 1, marginBottom: 12, textTransform: 'uppercase' },
+  sectionLabel: { fontSize: 13, color: '#8FAF9D', fontWeight: '700', letterSpacing: 1, marginBottom: 12, textTransform: 'uppercase' },
 
   cardsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
   donationCard: {
-    width: '47%', backgroundColor: '#060D1A', borderRadius: 16,
+    width: '47%', backgroundColor: '#081711', borderRadius: 16,
     borderWidth: 1.5, padding: 16, alignItems: 'center',
     position: 'relative', overflow: 'hidden',
   },
@@ -294,14 +295,14 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginBottom: 10, marginTop: 4,
   },
   cardAmount: { fontSize: 26, fontWeight: '800', marginBottom: 2 },
-  cardArabic: { fontSize: 16, marginBottom: 4 },
+  cardArabic: { fontSize: 16, marginBottom: 4, fontFamily: ARABIC_FONT },
   cardLabel: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
   cardDesc: { fontSize: 11, textAlign: 'center', lineHeight: 16 },
   selectedBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 2, borderRadius: 16, opacity: 0.8 },
 
   ctaBtn: {
     borderRadius: 16, overflow: 'hidden', marginBottom: 16,
-    shadowColor: '#3B82F6', shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
+    shadowColor: '#C9A227', shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
   },
   ctaBtnGrad: {
     paddingVertical: 17, alignItems: 'center', justifyContent: 'center',
@@ -311,5 +312,5 @@ const styles = StyleSheet.create({
 
   trustRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 8 },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  trustText: { fontSize: 11, color: '#2E4A72' },
+  trustText: { fontSize: 11, color: '#4E6B5C' },
 });

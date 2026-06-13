@@ -27,27 +27,69 @@ export const useVoiceRecorder = () => {
     return status === 'granted';
   };
 
+  // Tear down any recording instance still held by this hook OR left prepared
+  // inside expo-av's audio session from a previous (possibly crashed) attempt.
+  // Without this, a second start throws "Only one Recording object can be
+  // prepared at a given time."
+  const releaseStaleRecording = async () => {
+    clearInterval(timerRef.current);
+    if (recordingRef.current) {
+      try { await recordingRef.current.stopAndUnloadAsync(); } catch {}
+      recordingRef.current = null;
+    }
+    // Also stop any playback that may be holding the audio session.
+    if (soundRef.current) {
+      try { await soundRef.current.unloadAsync(); } catch {}
+      soundRef.current = null;
+    }
+    try { await Audio.setAudioModeAsync({ allowsRecordingIOS: false }); } catch {}
+  };
+
+  const createRecording = async () => {
+    const { recording } = await Audio.Recording.createAsync(
+      Audio.RecordingOptionsPresets.HIGH_QUALITY,
+      (status) => {
+        if (status.metering !== undefined) {
+          // Convert dBFS to 0-1 range
+          const level = Math.max(0, (status.metering + 60) / 60);
+          setAudioLevel(level);
+        }
+      },
+      100
+    );
+    return recording;
+  };
+
   const startRecording = useCallback(async () => {
     try {
       const granted = await requestPermissions();
       if (!granted) throw new Error('Microphone permission denied');
+
+      // Clear any recorder/player left over from a previous session.
+      await releaseStaleRecording();
 
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-        (status) => {
-          if (status.metering !== undefined) {
-            // Convert dBFS to 0-1 range
-            const level = Math.max(0, (status.metering + 60) / 60);
-            setAudioLevel(level);
-          }
-        },
-        100
-      );
+      let recording;
+      try {
+        recording = await createRecording();
+      } catch (err) {
+        // expo-av keeps a module-level singleton; if a prior Recording is still
+        // prepared, the first create throws. Reset and retry once.
+        if (/Only one Recording/i.test(err?.message || '')) {
+          await releaseStaleRecording();
+          await Audio.setAudioModeAsync({
+            allowsRecordingIOS: true,
+            playsInSilentModeIOS: true,
+          });
+          recording = await createRecording();
+        } else {
+          throw err;
+        }
+      }
 
       recordingRef.current = recording;
       setIsRecording(true);
@@ -58,6 +100,10 @@ export const useVoiceRecorder = () => {
       }, 1000);
     } catch (e) {
       console.error('Failed to start recording:', e);
+      // Leave the recorder in a clean state so the next attempt can succeed.
+      clearInterval(timerRef.current);
+      setIsRecording(false);
+      setAudioLevel(0);
       throw e;
     }
   }, []);

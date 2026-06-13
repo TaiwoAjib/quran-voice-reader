@@ -41,7 +41,7 @@ export default function MainTabNavigator() {
         component={SurahSelectionScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'book' : 'book-outline'} focused={focused} color={focused ? '#3B82F6' : theme.textMuted} label="Qur'an" />
+            <TabIcon name={focused ? 'book' : 'book-outline'} focused={focused} color={focused ? '#C9A227' : theme.textMuted} label="Qur'an" />
           ),
         }}
       />
@@ -50,7 +50,7 @@ export default function MainTabNavigator() {
         component={BookmarksScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'bookmark' : 'bookmark-outline'} focused={focused} color={focused ? '#3B82F6' : theme.textMuted} label="Saved" />
+            <TabIcon name={focused ? 'bookmark' : 'bookmark-outline'} focused={focused} color={focused ? '#C9A227' : theme.textMuted} label="Saved" />
           ),
         }}
       />
@@ -59,7 +59,7 @@ export default function MainTabNavigator() {
         component={VoiceSettingsScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'mic' : 'mic-outline'} focused={focused} color={focused ? '#3B82F6' : theme.textMuted} label="Voice" />
+            <TabIcon name={focused ? 'mic' : 'mic-outline'} focused={focused} color={focused ? '#C9A227' : theme.textMuted} label="Voice" />
           ),
         }}
       />
@@ -71,7 +71,7 @@ export default function MainTabNavigator() {
             <TabIcon
               name={focused ? 'heart' : 'heart-outline'}
               focused={focused}
-              color={focused ? '#E05EB5' : theme.textMuted}
+              color={focused ? '#C9A227' : theme.textMuted}
               label="Donate"
             />
           ),
@@ -82,7 +82,7 @@ export default function MainTabNavigator() {
         component={ProfilesScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} color={focused ? '#3B82F6' : theme.textMuted} label="Profile" />
+            <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} color={focused ? '#C9A227' : theme.textMuted} label="Profile" />
           ),
         }}
       />

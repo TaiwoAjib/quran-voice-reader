@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DEFAULT_RECITER_ID } from '../data/reciters';
 
 const AppContext = createContext(null);
 
@@ -18,6 +19,8 @@ export const AppProvider = ({ children }) => {
   const [recitationLanguage, setRecitationLanguageState] = useState('arabic'); // 'arabic' | 'english' | 'both'
   const [voiceMode, setVoiceModeState] = useState('authentic'); // 'authentic' | 'personalized'
   const [ttsGender, setTtsGender] = useState('male'); // 'male' | 'female'
+  const [reciter, setReciterState] = useState(DEFAULT_RECITER_ID); // selected qari
+  const [hydrated, setHydrated] = useState(false); // true once AsyncStorage has been read
 
   useEffect(() => {
     loadStoredData();
@@ -29,7 +32,7 @@ export const AppProvider = ({ children }) => {
         'profiles', 'currentProfileId', 'bookmarks',
         'lastRead', 'isNightMode', 'showTranslation',
         'readingSpeed', 'isOnboarded', 'fontSize', 'showTransliteration',
-        'subscription', 'recitationLanguage', 'voiceMode', 'ttsGender'
+        'subscription', 'recitationLanguage', 'voiceMode', 'ttsGender', 'reciter'
       ]);
       const data = Object.fromEntries(stored.map(([k, v]) => [k, v ? JSON.parse(v) : null]));
 
@@ -46,6 +49,7 @@ export const AppProvider = ({ children }) => {
       if (data.recitationLanguage) setRecitationLanguageState(data.recitationLanguage);
       if (data.voiceMode) setVoiceModeState(data.voiceMode);
       if (data.ttsGender) setTtsGender(data.ttsGender);
+      if (data.reciter) setReciterState(data.reciter);
 
       if (data.profiles && data.currentProfileId) {
         const profile = data.profiles.find(p => p.id === data.currentProfileId);
@@ -53,6 +57,8 @@ export const AppProvider = ({ children }) => {
       }
     } catch (e) {
       console.error('Error loading stored data:', e);
+    } finally {
+      setHydrated(true);
     }
   };
 
@@ -155,6 +161,11 @@ export const AppProvider = ({ children }) => {
     await AsyncStorage.setItem('ttsGender', JSON.stringify(gender));
   }, []);
 
+  const setReciter = useCallback(async (reciterId) => {
+    setReciterState(reciterId);
+    await AsyncStorage.setItem('reciter', JSON.stringify(reciterId));
+  }, []);
+
   const setSubscription = useCallback(async (plan) => {
     const sub = { plan, activatedAt: Date.now() };
     setSubscriptionState(sub);
@@ -186,36 +197,36 @@ export const AppProvider = ({ children }) => {
     }
   }, []);
 
-  // Blue-first theme palette
-  const BLUE  = '#3B82F6';  // primary blue
-  const BLUE_DARK = '#1D4ED8'; // deep blue
-  const SKY   = '#0EA5E9';  // secondary sky-blue
+  // Arabian palette — emerald green, gold, and warm sand (classic Islamic art colours)
+  const GOLD    = '#C9A227';  // primary accent
+  const EMERALD = '#0E7C5A';  // secondary accent
+  const EMERALD_DEEP = '#0A5C43';
   const theme = {
-    bg:        isNightMode ? '#060D1A' : '#EFF6FF',
-    bgCard:    isNightMode ? '#0D1829' : '#FFFFFF',
-    bgMuted:   isNightMode ? '#111F38' : '#DBEAFE',
-    text:      isNightMode ? '#E0EEFF' : '#0F1E3B',
-    textMuted: isNightMode ? '#6B8FB5' : '#3B5FA0',
-    textLight: isNightMode ? '#2E4A72' : '#93C5FD',
-    blue:      BLUE,
-    blueLight: '#93C5FD',
-    gold:      BLUE,       // keep 'gold' key for compat across all screens
-    goldLight: '#93C5FD',
-    green:     SKY,        // keep 'green' key for compat
-    greenLight:'#38BDF8',
-    border:    isNightMode ? '#1A2E4A' : '#BFDBFE',
-    accent:    BLUE_DARK,
+    bg:        isNightMode ? '#081711' : '#F7F3E8',
+    bgCard:    isNightMode ? '#10241C' : '#FFFFFF',
+    bgMuted:   isNightMode ? '#142B21' : '#F0EAD6',
+    text:      isNightMode ? '#EFF5EC' : '#1F2A1F',
+    textMuted: isNightMode ? '#8FAF9D' : '#5C6F5C',
+    textLight: isNightMode ? '#4E6B5C' : '#C9BD8F',
+    blue:      GOLD,       // keep 'blue' key for compat across all screens
+    blueLight: '#E3CE8F',
+    gold:      GOLD,
+    goldLight: '#E3CE8F',
+    green:     EMERALD,
+    greenLight:'#4CAF8E',
+    border:    isNightMode ? '#1E3A2E' : '#E4D9B8',
+    accent:    EMERALD_DEEP,
   };
 
   return (
     <AppContext.Provider value={{
       currentProfile, profiles, bookmarks, lastRead,
-      isNightMode, showTranslation, showTransliteration, readingSpeed, isOnboarded, fontSize,
-      subscription, recitationLanguage, voiceMode, ttsGender,
+      isNightMode, showTranslation, showTransliteration, readingSpeed, isOnboarded, fontSize, hydrated,
+      subscription, recitationLanguage, voiceMode, ttsGender, reciter,
       theme, saveProfile, deleteProfile, switchProfile,
       addBookmark, removeBookmark, isBookmarked, updateLastRead,
       completeOnboarding, toggleNightMode, updateSettings, setSubscription,
-      setRecitationLanguage, setVoiceMode, updateTtsGender,
+      setRecitationLanguage, setVoiceMode, updateTtsGender, setReciter,
       updateProfileRecordings, // Bug fix: now exposed so VoiceSettings can persist recordings
     }}>
       {children}

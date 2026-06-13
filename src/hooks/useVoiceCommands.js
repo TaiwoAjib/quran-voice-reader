@@ -87,7 +87,12 @@ export const useVoiceCommands = ({ onCommand, enabled = true }) => {
   }, []);
 
   const startListening = useCallback(async () => {
-    if (!Voice) return;
+    // Native speech module absent (e.g. running in Expo Go) — surface it so the
+    // UI doesn't hang silently. Voice search needs a dev/release build.
+    if (!Voice) {
+      setError('Voice recognition is not available in Expo Go — use a development or release build.');
+      return;
+    }
     try {
       // Request permissions first
       const { Audio } = require('expo-av');
@@ -96,11 +101,21 @@ export const useVoiceCommands = ({ onCommand, enabled = true }) => {
           setError('Microphone permission denied');
           return;
       }
-      
+
+      // Confirm a speech recognizer actually exists on this device (Android 11+
+      // needs the manifest <queries> we ship, plus Google speech services).
+      try {
+        const available = await Voice.isAvailable();
+        if (!available) {
+          setError('No speech recognizer is available on this device.');
+          return;
+        }
+      } catch {}
+
       setError(null);
       await Voice.start('en-US');
     } catch (e) {
-      setError(e.message);
+      setError(e.message || 'Voice recognition error');
     }
   }, []);
 
@@ -127,5 +142,5 @@ export const useVoiceCommands = ({ onCommand, enabled = true }) => {
     return () => stopListening();
   }, [enabled, startListening, stopListening]);
 
-  return { isListening, partialText, error, startListening, stopListening };
+  return { isListening, partialText, error, isAvailable: !!Voice, startListening, stopListening };
 };

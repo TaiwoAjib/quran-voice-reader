@@ -50,7 +50,7 @@ export default function ProfilesScreen({ navigation }) {
   const renderProfile = ({ item }) => {
     const isActive = item.id === currentProfile?.id;
     return (
-      <View style={[styles.profileCard, { backgroundColor: theme.bgCard, borderColor: isActive ? '#3B82F6' : theme.border },
+      <View style={[styles.profileCard, { backgroundColor: theme.bgCard, borderColor: isActive ? '#C9A227' : theme.border },
         isActive && { borderWidth: 1.5 }]}>
         <View style={styles.profileLeft}>
           <Text style={styles.profileAvatar}>{item.avatar || '👤'}</Text>
@@ -72,8 +72,8 @@ export default function ProfilesScreen({ navigation }) {
           </Text>
           {item.recordings?.length > 0 && (
             <View style={styles.profileStatus}>
-              <Ionicons name="mic" size={13} color="#3B82F6" />
-              <Text style={[styles.profileStatusText, { color: '#3B82F6' }]}>
+              <Ionicons name="mic" size={13} color="#C9A227" />
+              <Text style={[styles.profileStatusText, { color: '#C9A227' }]}>
                 {item.recordings.length} voice sample{item.recordings.length > 1 ? 's' : ''}
               </Text>
             </View>
@@ -87,7 +87,7 @@ export default function ProfilesScreen({ navigation }) {
           )}
           {isActive && (
             <TouchableOpacity onPress={() => navigation.navigate('VoiceSettings')} style={styles.editBtn}>
-              <Ionicons name="pencil-outline" size={16} color="#3B82F6" />
+              <Ionicons name="pencil-outline" size={16} color="#C9A227" />
             </TouchableOpacity>
           )}
           {!isActive && (
@@ -107,9 +107,9 @@ export default function ProfilesScreen({ navigation }) {
           <Text style={[styles.headerTitle, { color: theme.text }]}>Profiles</Text>
           <TouchableOpacity
             onPress={() => setShowNewModal(true)}
-            style={[styles.addBtn, { backgroundColor: '#2563EB22' }]}
+            style={[styles.addBtn, { backgroundColor: '#0E7C5A22' }]}
           >
-            <Ionicons name="add" size={18} color="#3B82F6" />
+            <Ionicons name="add" size={18} color="#C9A227" />
             <Text style={styles.addBtnText}>New</Text>
           </TouchableOpacity>
         </View>
@@ -123,7 +123,7 @@ export default function ProfilesScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={(
           <View style={[styles.infoCard, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-            <Ionicons name="people-outline" size={20} color="#3B82F6" />
+            <Ionicons name="people-outline" size={20} color="#C9A227" />
             <Text style={[styles.infoText, { color: theme.textMuted }]}>
               Multiple profiles allow different family members to have their own voice and reading history on this device.
             </Text>
@@ -160,7 +160,7 @@ export default function ProfilesScreen({ navigation }) {
 
             <TouchableOpacity onPress={handleCreate} disabled={!newName.trim()}>
               <LinearGradient
-                colors={newName.trim() ? ['#2563EB', '#1D4ED8'] : ['#333', '#222']}
+                colors={newName.trim() ? ['#0E7C5A', '#0A5C43'] : ['#2A4034', '#222']}
                 style={styles.createBtn}
               >
                 <Text style={styles.createBtnText}>Create Profile</Text>
@@ -178,33 +178,33 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   headerTitle: { fontSize: 22, fontWeight: '700' },
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
-  addBtnText: { color: '#3B82F6', fontWeight: '600', fontSize: 14 },
+  addBtnText: { color: '#C9A227', fontWeight: '600', fontSize: 14 },
   list: { padding: 16 },
   infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 12, padding: 14, borderWidth: 1, marginBottom: 16 },
   infoText: { flex: 1, fontSize: 13, lineHeight: 20 },
   profileCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, padding: 14, borderWidth: 1, gap: 12 },
   profileLeft: { position: 'relative' },
   profileAvatar: { fontSize: 36 },
-  activeDot: { position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: '#38BDF8', borderWidth: 2, borderColor: '#0D0D0D' },
+  activeDot: { position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: '#4CAF8E', borderWidth: 2, borderColor: '#0D0D0D' },
   profileInfo: { flex: 1 },
   profileNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   profileName: { fontSize: 17, fontWeight: '700' },
-  activeBadge: { backgroundColor: '#2563EB22', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  activeBadgeText: { color: '#3B82F6', fontSize: 10, fontWeight: '700' },
+  activeBadge: { backgroundColor: '#0E7C5A22', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
+  activeBadgeText: { color: '#C9A227', fontSize: 10, fontWeight: '700' },
   profileMeta: { fontSize: 12, marginBottom: 4 },
   profileStatus: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   profileStatusText: { fontSize: 12 },
   profileActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  switchBtn: { backgroundColor: '#2563EB22', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
-  switchBtnText: { color: '#3B82F6', fontSize: 12, fontWeight: '600' },
+  switchBtn: { backgroundColor: '#0E7C5A22', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  switchBtnText: { color: '#C9A227', fontSize: 12, fontWeight: '600' },
   editBtn: { padding: 6 },
   deleteBtn: { padding: 6 },
   modalOverlay: { flex: 1, backgroundColor: '#00000088', justifyContent: 'flex-end' },
   modalCard: { margin: 16, borderRadius: 24, padding: 24, marginBottom: 40 },
   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 20 },
   avatarPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  avatarOption: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: '#1A1A1A', borderWidth: 2, borderColor: '#333' },
-  avatarOptionActive: { borderColor: '#3B82F6', backgroundColor: '#2563EB22' },
+  avatarOption: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: '#14241D', borderWidth: 2, borderColor: '#2A4034' },
+  avatarOptionActive: { borderColor: '#C9A227', backgroundColor: '#0E7C5A22' },
   nameInput: { borderRadius: 12, padding: 14, fontSize: 16, borderWidth: 1, marginBottom: 16 },
   createBtn: { borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
   createBtnText: { color: '#FFF', fontWeight: '700', fontSize: 15 },

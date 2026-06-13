@@ -9,6 +9,8 @@ import { useApp } from '../context/AppContext';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { useTTS } from '../hooks/useTTS';
 import { TRAINING_SENTENCES } from '../data/quranData';
+import { RECITERS, getAyahAudioUrl } from '../data/reciters';
+import { ARABIC_FONT } from '../components/Ornaments';
 
 // ── Animated waveform shown while recording ────────────────────────────────────
 function Waveform({ isActive, audioLevel }) {
@@ -66,6 +68,7 @@ export default function VoiceSettingsScreen({ navigation }) {
     theme, currentProfile, readingSpeed, showTranslation, showTransliteration,
     isNightMode, fontSize, updateSettings, recitationLanguage, setRecitationLanguage,
     voiceMode, setVoiceMode, ttsGender, updateTtsGender, updateProfileRecordings,
+    reciter, setReciter,
   } = useApp();
 
   const {
@@ -73,17 +76,25 @@ export default function VoiceSettingsScreen({ navigation }) {
     startRecording, stopRecording, saveRecording, playRecording, deleteRecording,
   } = useVoiceRecorder();
 
-  const { previewArabicVoice } = useTTS({ ttsGender });
+  const { previewArabicVoice, stopSpeaking } = useTTS({ ttsGender });
 
   const [activeSection, setActiveSection] = useState(null);
   // Map: sampleIndex → saved URI (either freshly recorded or from profile)
-  const [sampleUris, setSampleUris] = useState(() => {
+  const [sampleUris, setSampleUris] = useState({});
+
+  // Re-sync from the profile whenever it loads/changes — the profile arrives
+  // asynchronously from AsyncStorage, so a mount-time initializer misses it.
+  useEffect(() => {
     const map = {};
     (currentProfile?.recordings || []).forEach((uri, i) => { if (uri) map[i] = uri; });
-    return map;
-  });
+    setSampleUris(map);
+  }, [currentProfile?.id, currentProfile?.recordings?.length]);
   const [activeSampleIdx, setActiveSampleIdx] = useState(null); // which sample is being recorded
   const [previewingGender, setPreviewingGender] = useState(null);
+  const [previewingReciter, setPreviewingReciter] = useState(null);
+
+  // Stop any preview audio when leaving the screen
+  useEffect(() => () => { stopSpeaking?.(); }, []);
 
   // ── Recording handlers ──────────────────────────────────────────────────────
   const handleToggleRecord = async (sampleIdx) => {
@@ -140,11 +151,21 @@ export default function VoiceSettingsScreen({ navigation }) {
     ]);
   };
 
-  // ── Arabian Voice Preview ───────────────────────────────────────────────────
+  // ── Voice / reciter previews ────────────────────────────────────────────────
   const handlePreviewVoice = async (gender) => {
     setPreviewingGender(gender);
     await previewArabicVoice(gender);
     setTimeout(() => setPreviewingGender(null), 3000);
+  };
+
+  // Streams Al-Fatiha v1 in the chosen qari's voice so the melody can be heard.
+  const handlePreviewReciter = async (reciterId) => {
+    setPreviewingReciter(reciterId);
+    const url = getAyahAudioUrl(reciterId, 1, 1);
+    try {
+      await previewArabicVoice(url);
+    } catch {}
+    setTimeout(() => setPreviewingReciter(null), 9000);
   };
 
   const speedOptions = [
@@ -167,7 +188,6 @@ export default function VoiceSettingsScreen({ navigation }) {
     { icon: 'play-skip-back', cmd: '"Previous ayah"', desc: 'Goes to previous verse' },
     { icon: 'repeat', cmd: '"Repeat ayah"', desc: 'Replays current verse' },
     { icon: 'arrow-forward-circle', cmd: '"Go to next Surah"', desc: 'Advances to next chapter' },
-    { icon: 'close', cmd: '"Close app"', desc: 'Exits the application' },
   ];
 
   const recordedCount = Object.keys(sampleUris).length;
@@ -194,9 +214,9 @@ export default function VoiceSettingsScreen({ navigation }) {
                   : 'No voice samples yet'}
               </Text>
             </View>
-            <View style={[styles.profileBadge, { backgroundColor: '#2563EB22' }]}>
-              <Ionicons name="mic-outline" size={16} color="#3B82F6" />
-              <Text style={[styles.profileBadgeText, { color: '#3B82F6' }]}>Voice</Text>
+            <View style={[styles.profileBadge, { backgroundColor: '#0E7C5A22' }]}>
+              <Ionicons name="mic-outline" size={16} color="#C9A227" />
+              <Text style={[styles.profileBadgeText, { color: '#C9A227' }]}>Voice</Text>
             </View>
           </View>
         </View>
@@ -211,7 +231,7 @@ export default function VoiceSettingsScreen({ navigation }) {
         {activeSection === 'voice' && (
           <View style={[styles.section, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
             <Text style={[styles.sectionDesc, { color: theme.textMuted }]}>
-              Record yourself reading these sentences. Your voice will be used during Qur'an recitation when "My Voice" mode is active.
+              Record yourself reading these sentences to practise your recitation. With "My Recitation" mode you can listen back to your own recordings.
             </Text>
 
             {TRAINING_SENTENCES.slice(0, 5).map((sentence, idx) => {
@@ -237,10 +257,10 @@ export default function VoiceSettingsScreen({ navigation }) {
                     {hasRecording && !isThisRecording && (
                       <TouchableOpacity
                         onPress={() => playRecording(sampleUris[idx])}
-                        style={[styles.sampleBtn, { backgroundColor: '#2563EB18' }]}
+                        style={[styles.sampleBtn, { backgroundColor: '#0E7C5A18' }]}
                       >
-                        <Ionicons name="play-circle" size={18} color="#3B82F6" />
-                        <Text style={[styles.sampleBtnText, { color: '#3B82F6' }]}>Play</Text>
+                        <Ionicons name="play-circle" size={18} color="#C9A227" />
+                        <Text style={[styles.sampleBtnText, { color: '#C9A227' }]}>Play</Text>
                       </TouchableOpacity>
                     )}
 
@@ -253,15 +273,15 @@ export default function VoiceSettingsScreen({ navigation }) {
                           ? { backgroundColor: '#FEE2E2' }
                           : hasRecording
                             ? { backgroundColor: theme.bgMuted }
-                            : { backgroundColor: '#2563EB18' },
+                            : { backgroundColor: '#0E7C5A18' },
                       ]}
                     >
                       <Ionicons
                         name={isThisRecording ? 'stop-circle' : 'mic'}
                         size={18}
-                        color={isThisRecording ? '#EF4444' : '#3B82F6'}
+                        color={isThisRecording ? '#EF4444' : '#C9A227'}
                       />
-                      <Text style={[styles.sampleBtnText, { color: isThisRecording ? '#EF4444' : '#3B82F6' }]}>
+                      <Text style={[styles.sampleBtnText, { color: isThisRecording ? '#EF4444' : '#C9A227' }]}>
                         {isThisRecording ? 'Stop' : hasRecording ? 'Re-record' : 'Record'}
                       </Text>
                     </TouchableOpacity>
@@ -293,7 +313,7 @@ export default function VoiceSettingsScreen({ navigation }) {
 
         {/* ── Arabian Voice Selection ───────────────────────────────────────── */}
         <SectionHeader
-          title="🕌 Arabian Voice"
+          title="🕌 Recitation Voice"
           theme={theme}
           onPress={() => setActiveSection(s => s === 'mode' ? null : 'mode')}
           isOpen={activeSection === 'mode'}
@@ -301,14 +321,14 @@ export default function VoiceSettingsScreen({ navigation }) {
         {activeSection === 'mode' && (
           <View style={[styles.section, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
             <Text style={[styles.sectionDesc, { color: theme.textMuted, marginBottom: 12 }]}>
-              Choose the voice used for Surah recitations.
+              Listen to real reciters (qaris) with authentic melodic recitation, or play back your own practice.
             </Text>
 
-            {/* Authentic / My Voice toggle */}
+            {/* Reciter / My Recitation toggle */}
             <View style={styles.speedRow}>
               {[
-                { id: 'authentic', label: '🕌 Authentic', desc: 'Native Arabian Voice' },
-                { id: 'personalized', label: '👤 My Voice', desc: 'Simulated Personal Voice' },
+                { id: 'authentic', label: '🕌 Reciter', desc: 'Melodic recitation by a qari' },
+                { id: 'personalized', label: '👤 My Recitation', desc: 'Plays back your own recordings' },
               ].map(opt => (
                 <TouchableOpacity
                   key={opt.id}
@@ -335,28 +355,60 @@ export default function VoiceSettingsScreen({ navigation }) {
               ))}
             </View>
 
-            {/* Native Arabian male/female voice selection with preview */}
+            {/* Reciter (qari) picker — real melodic recitation */}
             {voiceMode === 'authentic' && (
               <View style={{ marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.border }}>
-                <Text style={[styles.settingLabel, { color: theme.text, marginBottom: 14 }]}>
-                  Native Arabian Voice
+                <Text style={[styles.settingLabel, { color: theme.text, marginBottom: 4 }]}>
+                  Choose a Reciter
                 </Text>
-                <View style={styles.voiceCardsRow}>
+                <Text style={[styles.sectionDesc, { color: theme.textMuted, marginBottom: 14 }]}>
+                  Streamed online. Tap Preview to hear the opening of Al-Fātiḥah.
+                </Text>
+
+                {RECITERS.map(r => {
+                  const isSelected = reciter === r.id;
+                  const isPreviewing = previewingReciter === r.id;
+                  return (
+                    <TouchableOpacity
+                      key={r.id}
+                      onPress={() => setReciter(r.id)}
+                      style={[
+                        styles.reciterCard,
+                        { borderColor: isSelected ? '#C9A227' : theme.border, backgroundColor: isSelected ? '#0E7C5A12' : theme.bgMuted },
+                      ]}
+                    >
+                      <View style={styles.reciterStar}>
+                        <Text style={{ fontSize: 18, color: isSelected ? '#C9A227' : theme.textMuted }}>۞</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.reciterName, { color: isSelected ? '#C9A227' : theme.text }]}>{r.name}</Text>
+                        <Text style={[styles.reciterNameAr, { color: isSelected ? '#C9A227' : theme.text }]}>{r.nameAr}</Text>
+                        <Text style={[styles.reciterStyle, { color: theme.textMuted }]}>{r.style}</Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end', gap: 8 }}>
+                        {isSelected && <Ionicons name="checkmark-circle" size={20} color="#C9A227" />}
+                        <TouchableOpacity
+                          onPress={() => handlePreviewReciter(r.id)}
+                          style={[styles.previewBtn, isPreviewing && styles.previewBtnActive]}
+                        >
+                          <Ionicons name={isPreviewing ? 'volume-high' : 'play'} size={13} color={isPreviewing ? '#FFF' : '#C9A227'} />
+                          <Text style={[styles.previewBtnText, isPreviewing && { color: '#FFF' }]}>
+                            {isPreviewing ? 'Playing…' : 'Preview'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+
+                {/* Offline fallback voice (device TTS, used only when audio can't load) */}
+                <Text style={[styles.settingLabel, { color: theme.text, marginTop: 18, marginBottom: 10 }]}>
+                  Offline fallback voice
+                </Text>
+                <View style={styles.speedRow}>
                   {[
-                    {
-                      id: 'male',
-                      name: 'Ahmed',
-                      nameAr: 'أحمد',
-                      desc: 'Deep, clear narration',
-                      icon: '🎙️',
-                    },
-                    {
-                      id: 'female',
-                      name: 'Fatimah',
-                      nameAr: 'فاطمة',
-                      desc: 'Smooth, expressive tone',
-                      icon: '🎵',
-                    },
+                    { id: 'male', label: '🎙️ Male', nameAr: 'أحمد' },
+                    { id: 'female', label: '🎵 Female', nameAr: 'فاطمة' },
                   ].map(voice => {
                     const isSelected = ttsGender === voice.id;
                     const isPreviewing = previewingGender === voice.id;
@@ -364,47 +416,23 @@ export default function VoiceSettingsScreen({ navigation }) {
                       <TouchableOpacity
                         key={voice.id}
                         onPress={() => updateTtsGender(voice.id)}
+                        onLongPress={() => handlePreviewVoice(voice.id)}
                         style={[
-                          styles.voiceCard,
-                          { borderColor: isSelected ? '#3B82F6' : theme.border, backgroundColor: isSelected ? '#2563EB12' : theme.bgMuted },
+                          styles.speedChip,
+                          isSelected && styles.speedChipActive,
+                          { flex: 1, alignItems: 'center', paddingVertical: 12 },
                         ]}
                       >
-                        <Text style={{ fontSize: 28, marginBottom: 6 }}>{voice.icon}</Text>
-                        <Text style={[styles.voiceName, { color: isSelected ? '#3B82F6' : theme.text }]}>{voice.name}</Text>
-                        <Text style={[styles.voiceNameAr, { color: isSelected ? '#3B82F6' : theme.text }]}>{voice.nameAr}</Text>
-                        <Text style={[styles.voiceDesc, { color: theme.textMuted }]}>{voice.desc}</Text>
-
-                        {isSelected && (
-                          <View style={styles.selectedBadge}>
-                            <Ionicons name="checkmark-circle" size={14} color="#3B82F6" />
-                            <Text style={styles.selectedBadgeText}>Selected</Text>
-                          </View>
-                        )}
-
-                        {/* Preview button */}
-                        <TouchableOpacity
-                          onPress={() => handlePreviewVoice(voice.id)}
-                          style={[styles.previewBtn, isPreviewing && styles.previewBtnActive]}
-                        >
-                          <Ionicons name={isPreviewing ? 'volume-high' : 'volume-medium-outline'} size={14} color={isPreviewing ? '#FFF' : '#3B82F6'} />
-                          <Text style={[styles.previewBtnText, isPreviewing && { color: '#FFF' }]}>
-                            {isPreviewing ? 'Playing…' : 'Preview'}
-                          </Text>
-                        </TouchableOpacity>
+                        <Text style={[styles.speedChipText, isSelected && styles.speedChipTextActive, { fontWeight: '700', fontSize: 13 }]}>
+                          {voice.label}{isPreviewing ? ' ▸' : ''}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
-
-                {/* Preview phrase */}
-                <View style={[styles.previewPhrase, { backgroundColor: theme.bgMuted }]}>
-                  <Text style={[styles.previewPhraseAr, { color: '#3B82F6' }]}>
-                    بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                  </Text>
-                  <Text style={[styles.previewPhraseEn, { color: theme.textMuted }]}>
-                    Preview uses this phrase — Bismillah ir-Rahman ir-Raheem
-                  </Text>
-                </View>
+                <Text style={[styles.previewPhraseEn, { color: theme.textMuted, marginTop: 8 }]}>
+                  Used only when a reciter clip can't be streamed (e.g. offline). Long-press to preview.
+                </Text>
               </View>
             )}
           </View>
@@ -470,7 +498,7 @@ export default function VoiceSettingsScreen({ navigation }) {
                 {fontOptions.map(opt => (
                   <TouchableOpacity key={opt.value} onPress={() => updateSettings({ fontSize: opt.value })}
                     style={[styles.fontChip, fontSize === opt.value && styles.fontChipActive]}>
-                    <Text style={[{ fontSize: opt.size, color: fontSize === opt.value ? '#3B82F6' : theme.textMuted, fontWeight: '700' }]}>A</Text>
+                    <Text style={[{ fontSize: opt.size, color: fontSize === opt.value ? '#C9A227' : theme.textMuted, fontWeight: '700' }]}>A</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -485,7 +513,7 @@ export default function VoiceSettingsScreen({ navigation }) {
             <Text style={[styles.sectionDesc, { color: theme.textMuted }]}>Say these commands while the app is listening:</Text>
             {COMMANDS.map((cmd, i) => (
               <View key={i} style={[styles.cmdRow, { borderColor: theme.border }]}>
-                <Ionicons name={cmd.icon} size={16} color="#3B82F6" />
+                <Ionicons name={cmd.icon} size={16} color="#C9A227" />
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={[styles.cmdText, { color: theme.text }]}>{cmd.cmd}</Text>
                   <Text style={[styles.cmdDesc, { color: theme.textMuted }]}>{cmd.desc}</Text>
@@ -500,7 +528,7 @@ export default function VoiceSettingsScreen({ navigation }) {
                 '"Continue from where I stopped"',
                 '"Repeat last ayah"',
               ].map((c, i) => (
-                <Text key={i} style={[styles.navCmd, { color: '#3B82F6' }]}>{c}</Text>
+                <Text key={i} style={[styles.navCmd, { color: '#C9A227' }]}>{c}</Text>
               ))}
             </View>
           </View>
@@ -528,8 +556,8 @@ function SettingRow({ label, value, onChange, theme }) {
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ false: '#333', true: '#2563EB88' }}
-        thumbColor={value ? '#3B82F6' : '#888'}
+        trackColor={{ false: '#2A4034', true: '#0E7C5A88' }}
+        thumbColor={value ? '#C9A227' : '#888'}
       />
     </View>
   );
@@ -560,35 +588,42 @@ const styles = StyleSheet.create({
   sampleActions: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   sampleBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   sampleBtnText: { fontSize: 13, fontWeight: '600' },
-  noSamplesHint: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4, padding: 12, borderRadius: 8, backgroundColor: '#F1F5F9' },
+  noSamplesHint: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4, padding: 12, borderRadius: 8, backgroundColor: '#F0EAD8' },
   noSamplesText: { flex: 1, fontSize: 13, lineHeight: 18 },
+
+  // Reciter (qari) picker rows
+  reciterCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 14, borderWidth: 1.5, padding: 14, marginBottom: 10 },
+  reciterStar: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+  reciterName: { fontSize: 15, fontWeight: '700' },
+  reciterNameAr: { fontSize: 16, fontWeight: '600', marginTop: 1, fontFamily: ARABIC_FONT },
+  reciterStyle: { fontSize: 11, marginTop: 3 },
 
   // Voice cards (Ahmed / Fatimah)
   voiceCardsRow: { flexDirection: 'row', gap: 12 },
   voiceCard: { flex: 1, borderRadius: 14, borderWidth: 1.5, padding: 16, alignItems: 'center' },
   voiceName: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
-  voiceNameAr: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
+  voiceNameAr: { fontSize: 18, fontWeight: '700', marginBottom: 4, fontFamily: ARABIC_FONT },
   voiceDesc: { fontSize: 11, textAlign: 'center', marginBottom: 10 },
   selectedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 },
-  selectedBadgeText: { color: '#3B82F6', fontSize: 11, fontWeight: '700' },
-  previewBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: '#3B82F6', backgroundColor: 'transparent' },
-  previewBtnActive: { backgroundColor: '#3B82F6' },
-  previewBtnText: { color: '#3B82F6', fontSize: 12, fontWeight: '600' },
+  selectedBadgeText: { color: '#C9A227', fontSize: 11, fontWeight: '700' },
+  previewBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: '#C9A227', backgroundColor: 'transparent' },
+  previewBtnActive: { backgroundColor: '#C9A227' },
+  previewBtnText: { color: '#C9A227', fontSize: 12, fontWeight: '600' },
   previewPhrase: { marginTop: 16, borderRadius: 12, padding: 14, alignItems: 'center' },
-  previewPhraseAr: { fontSize: 18, marginBottom: 6, textAlign: 'center' },
+  previewPhraseAr: { fontSize: 19, marginBottom: 6, textAlign: 'center', fontFamily: ARABIC_FONT },
   previewPhraseEn: { fontSize: 11, textAlign: 'center' },
 
   speedRow: { flexDirection: 'row', gap: 12 },
-  speedChip: { flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: '#1A1A1A', alignItems: 'center', borderWidth: 1, borderColor: '#333' },
-  speedChipActive: { borderColor: '#3B82F6', backgroundColor: '#2563EB22' },
+  speedChip: { flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: '#14241D', alignItems: 'center', borderWidth: 1, borderColor: '#2A4034' },
+  speedChipActive: { borderColor: '#C9A227', backgroundColor: '#0E7C5A22' },
   speedChipText: { color: '#888', fontWeight: '600' },
-  speedChipTextActive: { color: '#3B82F6' },
+  speedChipTextActive: { color: '#C9A227' },
   settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1 },
   settingLabel: { fontSize: 15 },
   fontSizeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
   fontOptions: { flexDirection: 'row', gap: 12 },
-  fontChip: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333' },
-  fontChipActive: { borderColor: '#3B82F6' },
+  fontChip: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#14241D', borderWidth: 1, borderColor: '#2A4034' },
+  fontChipActive: { borderColor: '#C9A227' },
   cmdRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 10, borderBottomWidth: 1 },
   cmdText: { fontSize: 14, fontWeight: '600' },
   cmdDesc: { fontSize: 12, marginTop: 2 },

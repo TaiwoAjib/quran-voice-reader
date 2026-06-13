@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Animated, Platform, Dimensions, Alert, Modal,
+  Animated, Platform, Dimensions, Alert, Modal, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,8 @@ import { useTTS } from '../hooks/useTTS';
 import { useVoiceCommands } from '../hooks/useVoiceCommands';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { SURAHS, getSurahById } from '../data/quranData';
+import { getAyahAudioUrl } from '../data/reciters';
+import { StarBadge, OrnateDivider, ArchFrieze, ARABIC_FONT } from '../components/Ornaments';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,8 +23,8 @@ export default function RecitationScreen({ route, navigation }) {
   const { surahId: initSurahId = 1, ayahId: initAyahId = 1 } = route.params || {};
   const {
     theme, currentProfile, showTranslation, showTransliteration, readingSpeed,
-    isNightMode, addBookmark, removeBookmark, isBookmarked, updateLastRead,
-    recitationLanguage, setRecitationLanguage, voiceMode, ttsGender,
+    isNightMode, fontSize, addBookmark, removeBookmark, isBookmarked, updateLastRead,
+    recitationLanguage, setRecitationLanguage, voiceMode, ttsGender, reciter,
     updateProfileRecordings,
   } = useApp();
 
@@ -55,13 +57,12 @@ export default function RecitationScreen({ route, navigation }) {
   useEffect(() => { surahRef.current = surah; }, [surah]);
 
   const currentAyah = surah?.ayahs?.[currentAyahIndex];
-  const bookmarked = currentAyah ? isBookmarked(surah.id, currentAyah.id) : false;
 
   // ── TTS ────────────────────────────────────────────────────────────────────
   // Bug fix #4: onFinished uses refs so it doesn't capture stale isPlaying / currentAyahIndex
   const handleAyahFinishedRef = useRef(null);
 
-  const { isSpeaking, speak, speakArabic, speakTranslation, pauseSpeaking, resumeSpeaking, stopSpeaking } = useTTS({
+  const { isSpeaking, isBuffering, speak, speakArabic, speakTranslation, pauseSpeaking, resumeSpeaking, stopSpeaking } = useTTS({
     speed: readingSpeed,
     ttsGender,
     onWordSpoken: (idx) => setHighlightedWordIndex(idx),
@@ -131,22 +132,29 @@ export default function RecitationScreen({ route, navigation }) {
       const customVoiceUri = useCustomVoice && currentProfile?.recordings?.length > 0
         ? currentProfile.recordings[0]
         : null;
+      // Stream the selected qari's melodic recitation (unless playing back the
+      // user's own voice). speakArabic falls back to device TTS if it can't load.
+      const audioUrl = useCustomVoice ? null : getAyahAudioUrl(reciter, surahRef.current.id, ayah.number);
+      const arOpts = { useCustomVoice, customVoiceUri, audioUrl };
 
-      if (recitationLanguage === 'arabic') {
-        await speakArabic(ayah.arabic, ayah.words || [], useCustomVoice, customVoiceUri);
+      if (recitationLanguage === 'arabic' || (useCustomVoice && customVoiceUri)) {
+        await speakArabic(ayah.arabic, ayah.words || [], arOpts);
       } else if (recitationLanguage === 'english') {
-        await speakTranslation(ayah.translation, [], useCustomVoice, customVoiceUri);
+        await speakTranslation(ayah.translation, []);
       } else {
-        await speakArabic(ayah.arabic, ayah.words || [], useCustomVoice, customVoiceUri);
-        if (ayah.translation) {
+        // Both: recite the Arabic fully first, then the translation.
+        // notifyFinish is deferred to the English half so the ayah only
+        // auto-advances after both have played.
+        const result = await speakArabic(ayah.arabic, ayah.words || [], { ...arOpts, notifyFinish: false });
+        if (result?.finished && ayah.translation) {
           await new Promise(res => setTimeout(res, 400));
-          await speakTranslation(ayah.translation, [], useCustomVoice, customVoiceUri);
+          await speakTranslation(ayah.translation, []);
         }
       }
     } catch (e) {
       console.error('Playback error:', e);
     }
-  }, [speakArabic, speakTranslation, recitationLanguage, voiceMode, currentProfile]);
+  }, [speakArabic, speakTranslation, recitationLanguage, voiceMode, currentProfile, reciter]);
 
   // Bug fix #4: define handleAyahFinished using refs so it's never stale
   handleAyahFinishedRef.current = useCallback(() => {
@@ -285,11 +293,13 @@ export default function RecitationScreen({ route, navigation }) {
     }
   };
 
-  const handleBookmark = async () => {
-    if (bookmarked) {
-      await removeBookmark(surah.id, currentAyah.id);
+  // Toggles the bookmark for the ayah that was tapped (not just the active one)
+  const handleBookmark = async (ayah = currentAyah) => {
+    if (!ayah) return;
+    if (isBookmarked(surah.id, ayah.id)) {
+      await removeBookmark(surah.id, ayah.id);
     } else {
-      await addBookmark(surah.id, currentAyah.id, surah.name);
+      await addBookmark(surah.id, ayah.id, surah.name);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };
@@ -308,13 +318,13 @@ export default function RecitationScreen({ route, navigation }) {
 
           <View style={styles.headerCenter}>
             <Text style={[styles.headerSurahName, { color: theme.text }]}>{surah?.name}</Text>
-            <Text style={[styles.headerArabicName, { color: '#3B82F6' }]}>{surah?.nameArabic}</Text>
+            <Text style={[styles.headerArabicName, { color: '#C9A227' }]}>{surah?.nameArabic}</Text>
           </View>
 
           <View style={styles.headerRight}>
             <Animated.View style={[styles.micIndicator, { transform: [{ scale: micPulse }] },
               isListening && styles.micIndicatorActive]}>
-              <Ionicons name="mic" size={14} color={isListening ? '#38BDF8' : theme.textLight} />
+              <Ionicons name="mic" size={14} color={isListening ? '#4CAF8E' : theme.textLight} />
             </Animated.View>
             <TouchableOpacity onPress={() => setShowModeMenu(true)} style={styles.modeBtn}>
               <Ionicons name="options" size={20} color={theme.textMuted} />
@@ -324,24 +334,31 @@ export default function RecitationScreen({ route, navigation }) {
       </SafeAreaView>
 
       {/* Surah header card */}
-      <LinearGradient colors={isNightMode ? ['#1A1A1A', '#111'] : ['#FAF0DC', '#FFF7E6']} style={styles.surahHeaderCard}>
-        <Text style={[styles.surahHeaderArabic, { color: '#3B82F6' }]}>{surah?.nameArabic}</Text>
+      <LinearGradient colors={isNightMode ? ['#14241D', '#0A1B14'] : ['#F5EEDB', '#FAF5E8']} style={styles.surahHeaderCard}>
+        <ArchFrieze color="#C9A227" style={{ alignSelf: 'stretch', marginBottom: 6 }} />
+        <Text style={[styles.surahHeaderArabic, { color: '#C9A227', fontFamily: ARABIC_FONT }]}>
+          ﴾ {surah?.nameArabic} ﴿
+        </Text>
         <Text style={[styles.surahHeaderName, { color: theme.text }]}>{surah?.name} — {surah?.meaning}</Text>
         <Text style={[styles.surahHeaderMeta, { color: theme.textMuted }]}>
           {surah?.revelationType} · {surah?.ayahs?.length || surah?.totalAyahs} verses
         </Text>
-        <View style={styles.basmala}>
-          <Text style={[styles.basmalaText, { color: '#3B82F6' }]}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
-        </View>
+        {/* Basmala precedes every surah except At-Tawbah (9); in Al-Fatihah (1) it IS verse 1 */}
+        {surah?.id !== 9 && surah?.id !== 1 && (
+          <View style={styles.basmala}>
+            <OrnateDivider color="#C9A227" style={{ marginBottom: 10 }} />
+            <Text style={[styles.basmalaText, { color: '#C9A227', fontFamily: ARABIC_FONT }]}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
+          </View>
+        )}
       </LinearGradient>
 
       {/* Practice Mode banner */}
       {mode === MODES.PRACTICE && (
-        <View style={[styles.practiceBanner, { backgroundColor: isRecording ? '#FEF2F2' : '#EFF6FF' }]}>
+        <View style={[styles.practiceBanner, { backgroundColor: isRecording ? '#FEF2F2' : '#F7F3E8' }]}>
           <Animated.View style={{ transform: [{ scale: recordPulse }] }}>
-            <Ionicons name={isRecording ? 'radio' : 'mic-outline'} size={16} color={isRecording ? '#EF4444' : '#3B82F6'} />
+            <Ionicons name={isRecording ? 'radio' : 'mic-outline'} size={16} color={isRecording ? '#EF4444' : '#C9A227'} />
           </Animated.View>
-          <Text style={[styles.practiceBannerText, { color: isRecording ? '#EF4444' : '#3B82F6' }]}>
+          <Text style={[styles.practiceBannerText, { color: isRecording ? '#EF4444' : '#C9A227' }]}>
             {isRecording
               ? `Recording your recitation… ${recordingDuration}s`
               : showPracticeSaved
@@ -370,14 +387,14 @@ export default function RecitationScreen({ route, navigation }) {
               <View style={[
                 styles.ayahCard,
                 { backgroundColor: theme.bgCard, borderColor: theme.border },
-                isActive && { borderColor: '#3B82F6', borderWidth: 1.5 },
+                isActive && { borderColor: '#C9A227', borderWidth: 1.5 },
                 isActive && isRecording && { borderColor: '#EF4444' },
               ]}>
-                {/* Verse number */}
+                {/* Verse number — eight-point star motif */}
                 <View style={styles.verseNumWrap}>
-                  <View style={[styles.verseNumCircle, { borderColor: isActive ? '#3B82F6' : theme.border }]}>
-                    <Text style={[styles.verseNum, { color: isActive ? '#3B82F6' : theme.textMuted }]}>{ayah.number}</Text>
-                  </View>
+                  <StarBadge size={38} color={isActive ? '#C9A227' : theme.border} filled={isActive}>
+                    <Text style={[styles.verseNum, { color: isActive ? '#C9A227' : theme.textMuted }]}>{ayah.number}</Text>
+                  </StarBadge>
                 </View>
 
                 {/* Arabic text with word highlighting */}
@@ -385,7 +402,7 @@ export default function RecitationScreen({ route, navigation }) {
                   <Text style={[styles.arabicText, { color: theme.text, fontSize: fs.arabic }]} dir="rtl">
                     {isActive && highlightedWordIndex >= 0
                       ? ayah.words?.map((word, wi) => (
-                        <Text key={wi} style={[wi === highlightedWordIndex && { color: '#3B82F6', fontWeight: '700' }]}>
+                        <Text key={wi} style={[wi === highlightedWordIndex && { color: '#C9A227', fontWeight: '700' }]}>
                           {word}{' '}
                         </Text>
                       ))
@@ -409,13 +426,13 @@ export default function RecitationScreen({ route, navigation }) {
                       onPress={() => { setCurrentAyahIndex(index); playAyah(ayah); }}
                       style={styles.ayahAction}
                     >
-                      <Ionicons name="play-circle-outline" size={18} color={isActive ? '#3B82F6' : theme.textLight} />
+                      <Ionicons name="play-circle-outline" size={18} color={isActive ? '#C9A227' : theme.textLight} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleBookmark} style={styles.ayahAction}>
+                    <TouchableOpacity onPress={() => handleBookmark(ayah)} style={styles.ayahAction}>
                       <Ionicons
                         name={isBookmarked(surah.id, ayah.id) ? 'bookmark' : 'bookmark-outline'}
                         size={18}
-                        color={isBookmarked(surah.id, ayah.id) ? '#3B82F6' : theme.textLight}
+                        color={isBookmarked(surah.id, ayah.id) ? '#C9A227' : theme.textLight}
                       />
                     </TouchableOpacity>
                   </View>
@@ -428,9 +445,9 @@ export default function RecitationScreen({ route, navigation }) {
         {/* Next surah button */}
         {surah && getSurahById(surah.id + 1) && (
           <TouchableOpacity onPress={handleNextSurah} style={styles.nextSurahBtn}>
-            <LinearGradient colors={['#2563EB22', '#2563EB11']} style={styles.nextSurahGrad}>
+            <LinearGradient colors={['#0E7C5A22', '#0E7C5A11']} style={styles.nextSurahGrad}>
               <Text style={styles.nextSurahText}>Continue to {getSurahById(surah.id + 1)?.name}</Text>
-              <Ionicons name="arrow-forward" size={16} color="#3B82F6" />
+              <Ionicons name="arrow-forward" size={16} color="#C9A227" />
             </LinearGradient>
           </TouchableOpacity>
         )}
@@ -441,7 +458,7 @@ export default function RecitationScreen({ route, navigation }) {
       {isListening && (
         <View style={styles.listeningBanner}>
           <Animated.View style={{ transform: [{ scale: micPulse }] }}>
-            <Ionicons name="mic" size={14} color="#38BDF8" />
+            <Ionicons name="mic" size={14} color="#4CAF8E" />
           </Animated.View>
           <Text style={styles.listeningText}>Listening for commands…</Text>
         </View>
@@ -502,12 +519,16 @@ export default function RecitationScreen({ route, navigation }) {
 
           {/* Main play button */}
           <TouchableOpacity onPress={handlePlayPause} style={styles.playBtn}>
-            <LinearGradient colors={['#2563EB', '#1D4ED8']} style={styles.playBtnGrad}>
-              <Ionicons
-                name={isSpeaking && !isPaused ? 'pause' : 'play'}
-                size={28}
-                color="#FFF"
-              />
+            <LinearGradient colors={['#0E7C5A', '#0A5C43']} style={styles.playBtnGrad}>
+              {isBuffering ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Ionicons
+                  name={isSpeaking && !isPaused ? 'pause' : 'play'}
+                  size={28}
+                  color="#FFF"
+                />
+              )}
             </LinearGradient>
           </TouchableOpacity>
 
@@ -518,7 +539,7 @@ export default function RecitationScreen({ route, navigation }) {
                 <Ionicons
                   name={isRecording ? 'stop-circle' : 'mic-circle-outline'}
                   size={28}
-                  color={isRecording ? '#EF4444' : '#3B82F6'}
+                  color={isRecording ? '#EF4444' : '#C9A227'}
                 />
               </Animated.View>
             </TouchableOpacity>
@@ -537,10 +558,10 @@ export default function RecitationScreen({ route, navigation }) {
         {mode === MODES.PRACTICE && practiceRecUri && !isRecording && (
           <TouchableOpacity
             onPress={() => playRecording(practiceRecUri)}
-            style={[styles.voiceCmdToggle, { backgroundColor: '#2563EB18', marginBottom: 4 }]}
+            style={[styles.voiceCmdToggle, { backgroundColor: '#0E7C5A18', marginBottom: 4 }]}
           >
-            <Ionicons name="play-circle-outline" size={16} color="#3B82F6" />
-            <Text style={[styles.voiceCmdText, { color: '#3B82F6' }]}>Play my last recitation</Text>
+            <Ionicons name="play-circle-outline" size={16} color="#C9A227" />
+            <Text style={[styles.voiceCmdText, { color: '#C9A227' }]}>Play my last recitation</Text>
           </TouchableOpacity>
         )}
 
@@ -550,8 +571,8 @@ export default function RecitationScreen({ route, navigation }) {
             onPress={() => setVoiceCommandsEnabled(v => !v)}
             style={[styles.voiceCmdToggle, { backgroundColor: theme.bgMuted }]}
           >
-            <Ionicons name={voiceCommandsEnabled ? 'mic' : 'mic-off'} size={14} color={voiceCommandsEnabled ? '#38BDF8' : theme.textMuted} />
-            <Text style={[styles.voiceCmdText, { color: voiceCommandsEnabled ? '#38BDF8' : theme.textMuted }]}>
+            <Ionicons name={voiceCommandsEnabled ? 'mic' : 'mic-off'} size={14} color={voiceCommandsEnabled ? '#4CAF8E' : theme.textMuted} />
+            <Text style={[styles.voiceCmdText, { color: voiceCommandsEnabled ? '#4CAF8E' : theme.textMuted }]}>
               {voiceCommandsEnabled ? 'Voice Commands On' : 'Voice Commands Off'}
             </Text>
           </TouchableOpacity>
@@ -567,7 +588,7 @@ export default function RecitationScreen({ route, navigation }) {
             <Text style={[styles.reflectionSubtitle, { color: theme.textMuted }]}>You've finished {surah?.name}</Text>
 
             <TouchableOpacity onPress={handleNextSurah} style={styles.reflectionBtn}>
-              <LinearGradient colors={['#2563EB', '#1D4ED8']} style={styles.reflectionBtnGrad}>
+              <LinearGradient colors={['#0E7C5A', '#0A5C43']} style={styles.reflectionBtnGrad}>
                 <Text style={styles.reflectionBtnText}>Continue to next Surah</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -579,7 +600,7 @@ export default function RecitationScreen({ route, navigation }) {
 
             <TouchableOpacity onPress={() => { addBookmark(surah.id, 1, surah.name); setShowReflection(false); }}
               style={styles.bookmarkReflectionBtn}>
-              <Ionicons name="bookmark-outline" size={16} color="#3B82F6" />
+              <Ionicons name="bookmark-outline" size={16} color="#C9A227" />
               <Text style={styles.bookmarkReflectionText}>Save to Bookmarks</Text>
             </TouchableOpacity>
 
@@ -600,13 +621,13 @@ export default function RecitationScreen({ route, navigation }) {
               { id: MODES.PRACTICE, icon: 'mic-outline', label: 'Practice Mode', desc: 'Record your recitation and play it back' },
             ].map(m => (
               <TouchableOpacity key={m.id} onPress={() => { setMode(m.id); setShowModeMenu(false); }}
-                style={[styles.modeOption, mode === m.id && { borderColor: '#3B82F6', borderWidth: 1 }, { backgroundColor: theme.bgMuted }]}>
-                <Ionicons name={m.icon} size={20} color={mode === m.id ? '#3B82F6' : theme.textMuted} />
+                style={[styles.modeOption, mode === m.id && { borderColor: '#C9A227', borderWidth: 1 }, { backgroundColor: theme.bgMuted }]}>
+                <Ionicons name={m.icon} size={20} color={mode === m.id ? '#C9A227' : theme.textMuted} />
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={[styles.modeLabel, { color: theme.text }]}>{m.label}</Text>
                   <Text style={[styles.modeDesc, { color: theme.textMuted }]}>{m.desc}</Text>
                 </View>
-                {mode === m.id && <Ionicons name="checkmark-circle" size={18} color="#3B82F6" />}
+                {mode === m.id && <Ionicons name="checkmark-circle" size={18} color="#C9A227" />}
               </TouchableOpacity>
             ))}
           </View>
@@ -624,52 +645,51 @@ const styles = StyleSheet.create({
   headerSurahName: { fontSize: 16, fontWeight: '700' },
   headerArabicName: { fontSize: 14 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  micIndicator: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#1A1A1A', alignItems: 'center', justifyContent: 'center' },
-  micIndicatorActive: { backgroundColor: '#38BDF822' },
+  micIndicator: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#14241D', alignItems: 'center', justifyContent: 'center' },
+  micIndicatorActive: { backgroundColor: '#4CAF8E22' },
   modeBtn: { padding: 4 },
   surahHeaderCard: { paddingVertical: 20, paddingHorizontal: 24, alignItems: 'center', gap: 4 },
   surahHeaderArabic: { fontSize: 28 },
   surahHeaderName: { fontSize: 16, fontWeight: '700' },
   surahHeaderMeta: { fontSize: 12 },
-  basmala: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#2563EB33', width: '100%', alignItems: 'center' },
-  basmalaText: { fontSize: 20 },
+  basmala: { marginTop: 12, width: '100%', alignItems: 'center' },
+  basmalaText: { fontSize: 22 },
   practiceBanner: { paddingHorizontal: 16, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 8 },
   practiceBannerText: { flex: 1, fontSize: 13, fontWeight: '600' },
   ayahList: { flex: 1 },
   ayahContent: { paddingHorizontal: 16, paddingTop: 12 },
   ayahCard: { borderRadius: 16, padding: 16, marginBottom: 10, borderWidth: 1, flexDirection: 'row', gap: 12 },
   verseNumWrap: { paddingTop: 4 },
-  verseNumCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  verseNum: { fontSize: 12, fontWeight: '700' },
+  verseNum: { fontSize: 11, fontWeight: '700' },
   ayahTextWrap: { flex: 1 },
-  arabicText: { textAlign: 'right', lineHeight: 52, fontFamily: Platform.OS === 'ios' ? 'Arial' : 'sans-serif', marginBottom: 10 },
+  arabicText: { textAlign: 'right', lineHeight: 56, fontFamily: ARABIC_FONT, marginBottom: 10 },
   translitText: { fontSize: 13, fontStyle: 'italic', marginBottom: 8, lineHeight: 20 },
   translationText: { lineHeight: 22, marginBottom: 10 },
   ayahActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
   ayahAction: { padding: 4 },
-  listeningBanner: { position: 'absolute', top: 100, alignSelf: 'center', backgroundColor: '#38BDF822', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: '#38BDF844' },
-  listeningText: { color: '#38BDF8', fontSize: 12 },
+  listeningBanner: { position: 'absolute', top: 100, alignSelf: 'center', backgroundColor: '#4CAF8E22', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: '#4CAF8E44' },
+  listeningText: { color: '#4CAF8E', fontSize: 12 },
   controls: { borderTopWidth: 1, paddingHorizontal: 20, paddingTop: 12, paddingBottom: Platform.OS === 'ios' ? 34 : 16 },
   progress: { marginBottom: 12 },
   progressText: { fontSize: 11, marginBottom: 6 },
   progressTrack: { height: 3, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: '#3B82F6', borderRadius: 2 },
+  progressFill: { height: '100%', backgroundColor: '#C9A227', borderRadius: 2 },
   controlBtns: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 10 },
   controlBtn: { padding: 8 },
-  playBtn: { borderRadius: 32, overflow: 'hidden', shadowColor: '#3B82F6', shadowOpacity: 0.4, shadowRadius: 8, elevation: 6 },
+  playBtn: { borderRadius: 32, overflow: 'hidden', shadowColor: '#C9A227', shadowOpacity: 0.4, shadowRadius: 8, elevation: 6 },
   playBtnGrad: { width: 64, height: 64, alignItems: 'center', justifyContent: 'center', borderRadius: 32 },
   voiceCmdToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 6, borderRadius: 20, paddingHorizontal: 14, alignSelf: 'center', marginBottom: 2 },
   voiceCmdText: { fontSize: 11 },
   langToggleRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 10 },
   langBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, backgroundColor: 'transparent' },
-  langBtnActive: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
+  langBtnActive: { backgroundColor: '#C9A227', borderColor: '#C9A227' },
   langBtnText: { fontSize: 12, fontWeight: '600' },
   nextSurahBtn: { marginTop: 8, borderRadius: 12, overflow: 'hidden' },
   nextSurahGrad: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 20, gap: 8, justifyContent: 'center' },
-  nextSurahText: { color: '#3B82F6', fontWeight: '600', fontSize: 14 },
+  nextSurahText: { color: '#C9A227', fontWeight: '600', fontSize: 14 },
   modalOverlay: { flex: 1, backgroundColor: '#00000088', justifyContent: 'flex-end' },
   reflectionCard: { margin: 20, borderRadius: 24, padding: 28, alignItems: 'center' },
-  reflectionArabic: { fontSize: 32, color: '#3B82F6', marginBottom: 8 },
+  reflectionArabic: { fontSize: 32, color: '#C9A227', marginBottom: 8, fontFamily: ARABIC_FONT },
   reflectionTitle: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
   reflectionSubtitle: { fontSize: 14, marginBottom: 24 },
   reflectionBtn: { width: '100%', borderRadius: 12, overflow: 'hidden', marginBottom: 10 },
@@ -678,7 +698,7 @@ const styles = StyleSheet.create({
   reflectionBtnSecondary: { width: '100%', paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginBottom: 10 },
   reflectionBtnSecondaryText: { fontSize: 15, fontWeight: '600' },
   bookmarkReflectionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10 },
-  bookmarkReflectionText: { color: '#3B82F6', fontSize: 14 },
+  bookmarkReflectionText: { color: '#C9A227', fontSize: 14 },
   closeReflection: { padding: 10 },
   closeReflectionText: { fontSize: 13 },
   modeMenuCard: { marginHorizontal: 16, marginBottom: 40, borderRadius: 20, padding: 20 },

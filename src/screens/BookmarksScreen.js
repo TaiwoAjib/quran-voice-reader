@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 import { getSurahById } from '../data/quranData';
+import { ARABIC_FONT } from '../components/Ornaments';
 
 export default function BookmarksScreen({ navigation }) {
   const { theme, bookmarks, removeBookmark, lastRead } = useApp();
@@ -41,15 +42,15 @@ export default function BookmarksScreen({ navigation }) {
       <TouchableOpacity onPress={() => handleOpen(item)} activeOpacity={0.8}>
         <View style={[styles.card, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
           <View style={styles.cardLeft}>
-            <View style={[styles.iconWrap, { backgroundColor: '#2563EB22' }]}>
-              <Ionicons name="bookmark" size={18} color="#3B82F6" />
+            <View style={[styles.iconWrap, { backgroundColor: '#0E7C5A22' }]}>
+              <Ionicons name="bookmark" size={18} color="#C9A227" />
             </View>
           </View>
           <View style={styles.cardBody}>
             <Text style={[styles.surahName, { color: theme.text }]}>{item.surahName}</Text>
             <Text style={[styles.ayahNum, { color: theme.textMuted }]}>Verse {item.ayahId}</Text>
             {ayah && (
-              <Text style={[styles.arabicSnippet, { color: '#3B82F6' }]} numberOfLines={1}>
+              <Text style={[styles.arabicSnippet, { color: '#C9A227' }]} numberOfLines={1}>
                 {ayah.arabic}
               </Text>
             )}
@@ -62,7 +63,7 @@ export default function BookmarksScreen({ navigation }) {
           </View>
           <View style={styles.cardActions}>
             <TouchableOpacity onPress={() => handleOpen(item)} style={styles.actionBtn}>
-              <Ionicons name="play-circle-outline" size={24} color="#3B82F6" />
+              <Ionicons name="play-circle-outline" size={24} color="#C9A227" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => handleDelete(item.surahId, item.ayahId)} style={styles.actionBtn}>
               <Ionicons name="trash-outline" size={20} color={theme.textLight} />
@@ -91,10 +92,10 @@ export default function BookmarksScreen({ navigation }) {
             const surah = getSurahById(lastRead.surahId);
             if (surah) navigation.navigate('Recitation', { surahId: lastRead.surahId, ayahId: lastRead.ayahId });
           }}
-          style={[styles.lastReadCard, { backgroundColor: theme.bgCard, borderColor: '#2563EB44' }]}
+          style={[styles.lastReadCard, { backgroundColor: theme.bgCard, borderColor: '#0E7C5A44' }]}
         >
-          <View style={[styles.iconWrap, { backgroundColor: '#0EA5E922' }]}>
-            <Ionicons name="time" size={18} color="#38BDF8" />
+          <View style={[styles.iconWrap, { backgroundColor: '#2E8B6D22' }]}>
+            <Ionicons name="time" size={18} color="#4CAF8E" />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={[styles.lastReadLabel, { color: theme.textMuted }]}>Last Read</Text>
@@ -102,7 +103,7 @@ export default function BookmarksScreen({ navigation }) {
               {getSurahById(lastRead.surahId)?.name} · Verse {lastRead.ayahId}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#38BDF8" />
+          <Ionicons name="chevron-forward" size={18} color="#4CAF8E" />
         </TouchableOpacity>
       )}
 
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
   cardBody: { flex: 1 },
   surahName: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
   ayahNum: { fontSize: 12, marginBottom: 6 },
-  arabicSnippet: { fontSize: 17, marginBottom: 4 },
+  arabicSnippet: { fontSize: 17, marginBottom: 4, fontFamily: ARABIC_FONT },
   transSnippet: { fontSize: 12, lineHeight: 18, marginBottom: 6 },
   dateText: { fontSize: 11 },
   cardActions: { justifyContent: 'space-between', paddingLeft: 8 },

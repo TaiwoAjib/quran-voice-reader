@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0A0F"
+      "backgroundColor": "#081711"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -25,7 +25,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0A0A0F"
+        "backgroundColor": "#081711"
       },
       "package": "com.quranvoicereader",
       "versionCode": 1,
@@ -46,6 +46,14 @@
           "microphonePermission": "Allow Qur'an Voice Reader to access your microphone for voice training and commands."
         }
       ],
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Allow Qur'an Voice Reader to access your microphone for voice search and commands.",
+          "speechRecognitionPermission": "Allow Qur'an Voice Reader to recognize your speech for hands-free Surah search."
+        }
+      ],
+      "./plugins/withAndroidSpeechQueries",
       "expo-font"
     ]
   }

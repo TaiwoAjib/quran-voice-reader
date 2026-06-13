@@ -156,6 +156,14 @@ voice feature. The app functions for reading and listening even if you decline t
 
 ---
 
+## Developer
+
+**Ajibode Taiwo Sulaimon** — realitytaiwo2@gmail.com
+
+Qur'an Voice Reader is built with ❤️ to help Muslims engage with the Qur'an in a meaningful, accessible way. This app is free and will always remain free.
+
+---
+
 ## Notes
 
 - The donation screen processes **real PayPal payments** via PayPal Smart Buttons (client-side, no backend). Only the PayPal **Client ID** is in the app (`src/config/paypal.js`) — it's public by design. The PayPal **Secret key is never embedded** in the app; keep it server-side only.

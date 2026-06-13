@@ -255,6 +255,20 @@ export default function SubscriptionScreen({ navigation, route }) {
             ))}
           </View>
 
+          {/* About the Developer */}
+          <View style={styles.aboutSection}>
+            <Text style={styles.aboutTitle}>About the Developer</Text>
+            <Text style={styles.aboutText}>
+              Qur'an Voice Reader is built with ❤️ by
+            </Text>
+            <Text style={styles.developerName}>Ajibode Taiwo Sulaimon</Text>
+            <Text style={styles.aboutEmail}>realitytaiwo2@gmail.com</Text>
+            <Text style={styles.aboutFooter}>
+              This app is free and open-source, dedicated to helping Muslims{'\n'}
+              engage with the Qur'an in a meaningful, accessible way.
+            </Text>
+          </View>
+
           <View style={{ height: 40 }} />
         </Animated.ScrollView>
       </SafeAreaView>
@@ -331,4 +345,14 @@ const styles = StyleSheet.create({
   trustRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 8 },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   trustText: { fontSize: 11, color: '#4E6B5C' },
+
+  aboutSection: {
+    marginTop: 20, paddingHorizontal: 20, paddingVertical: 16,
+    borderTopWidth: 1, borderTopColor: '#1E3A2E', alignItems: 'center',
+  },
+  aboutTitle: { fontSize: 14, fontWeight: '700', color: '#C9A227', marginBottom: 8 },
+  aboutText: { fontSize: 13, color: '#8FAF9D', marginBottom: 6, textAlign: 'center' },
+  developerName: { fontSize: 15, fontWeight: '800', color: '#EFF5EC', marginBottom: 2 },
+  aboutEmail: { fontSize: 12, color: '#6B9B8A', marginBottom: 12 },
+  aboutFooter: { fontSize: 12, color: '#4E6B5C', textAlign: 'center', lineHeight: 18 },
 });

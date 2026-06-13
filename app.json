@@ -3,6 +3,10 @@
     "name": "Qur'an Voice Reader",
     "slug": "quran-voice-reader",
     "version": "1.0.0",
+    "author": {
+      "name": "Ajibode Taiwo Sulaimon",
+      "email": "realitytaiwo2@gmail.com"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",

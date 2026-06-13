@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ARABIC_FONT } from '../components/Ornaments';
+import PayPalCheckout from '../components/PayPalCheckout';
 
 const DONATION_AMOUNTS = [
   {
@@ -60,6 +61,7 @@ const DONATION_AMOUNTS = [
 export default function SubscriptionScreen({ navigation, route }) {
   const [selectedId, setSelectedId] = useState('support');
   const [donated, setDonated] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
@@ -90,22 +92,29 @@ export default function SubscriptionScreen({ navigation, route }) {
       return;
     }
 
+    // Open the secure PayPal checkout for the selected amount.
+    setShowCheckout(true);
+  };
+
+  const handlePaymentSuccess = (result) => {
+    setShowCheckout(false);
+    setDonated(true);
+    const payer = result?.payer ? `, ${result.payer}` : '';
     Alert.alert(
       'جَزَاكَ اللَّهُ خَيْرًا',
-      `Jazakallahu Khayran!\n\nMay Allah reward you abundantly for your ${selected.amount} ${selected.label} donation.\n\n(This is a demonstration — no real payment is processed.)`,
-      [
-        {
-          text: 'Ameen 🤲',
-          onPress: () => {
-            setDonated(true);
-            if (fromOnboarding) {
-              setTimeout(() => navigation.replace('Main'), 1500);
-            }
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
+      `Jazakallahu Khayran${payer}! 🤲\n\nYour donation was received. May Allah reward you abundantly.`,
+      [{
+        text: 'Ameen',
+        onPress: () => { if (fromOnboarding) setTimeout(() => navigation.replace('Main'), 800); },
+      }]
     );
+  };
+
+  const handlePaymentCancel = (reason) => {
+    setShowCheckout(false);
+    if (reason && reason !== 'cancel') {
+      Alert.alert('Payment not completed', 'The donation could not be processed. Please try again.');
+    }
   };
 
   const handleSkip = () => {
@@ -249,6 +258,15 @@ export default function SubscriptionScreen({ navigation, route }) {
           <View style={{ height: 40 }} />
         </Animated.ScrollView>
       </SafeAreaView>
+
+      <PayPalCheckout
+        visible={showCheckout}
+        amount={selected?.amount}
+        label={selected?.label}
+        onSuccess={handlePaymentSuccess}
+        onCancel={handlePaymentCancel}
+        onClose={() => setShowCheckout(false)}
+      />
     </LinearGradient>
   );
 }

@@ -132,7 +132,7 @@ src/
     ├── VoiceSettingsScreen.js
     ├── BookmarksScreen.js
     ├── ProfilesScreen.js
-    ├── SubscriptionScreen.js   # Optional donations (no real payment)
+    ├── SubscriptionScreen.js   # Optional donations via PayPal
     └── MainTabNavigator.js
 ```
 
@@ -157,5 +157,5 @@ voice feature. The app functions for reading and listening even if you decline t
 
 ## Notes
 
-- The donation screen is for supporting the project and **processes no real payments** — it's a demonstration flow.
+- The donation screen processes **real PayPal payments** via PayPal Smart Buttons (client-side, no backend). Only the PayPal **Client ID** is in the app (`src/config/paypal.js`) — it's public by design. The PayPal **Secret key is never embedded** in the app; keep it server-side only.
 - Surah At-Tawbah (9) correctly omits the Basmala; Al-Fatihah (1) includes it as verse 1.

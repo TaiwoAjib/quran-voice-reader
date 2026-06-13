@@ -68,3 +68,19 @@ export const getAyahAudioUrl = (reciterId, surahId, ayahNumber) => {
   const reciter = getReciterById(reciterId);
   return `https://everyayah.com/data/${reciter.folder}/${pad3(surahId)}${pad3(ayahNumber)}.mp3`;
 };
+
+// ── English translation narration ─────────────────────────────────────────────
+// A real, warmly-narrated human reading of the Sahih International translation
+// (Ibrahim Walk) — matches the on-screen translation text. Far more natural than
+// device text-to-speech, which is used only as an offline fallback.
+export const ENGLISH_NARRATION = {
+  id: 'ibrahim_walk',
+  name: 'Ibrahim Walk',
+  translation: 'Sahih International',
+  folder: 'English/Sahih_Intnl_Ibrahim_Walk_192kbps',
+};
+
+export const getTranslationAudioUrl = (surahId, ayahNumber) => {
+  if (!surahId || !ayahNumber) return null;
+  return `https://everyayah.com/data/${ENGLISH_NARRATION.folder}/${pad3(surahId)}${pad3(ayahNumber)}.mp3`;
+};

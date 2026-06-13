@@ -12,7 +12,7 @@ import { useTTS } from '../hooks/useTTS';
 import { useVoiceCommands } from '../hooks/useVoiceCommands';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { SURAHS, getSurahById } from '../data/quranData';
-import { getAyahAudioUrl } from '../data/reciters';
+import { getAyahAudioUrl, getTranslationAudioUrl } from '../data/reciters';
 import { StarBadge, OrnateDivider, ArchFrieze, ARABIC_FONT } from '../components/Ornaments';
 
 const { width, height } = Dimensions.get('window');
@@ -134,13 +134,17 @@ export default function RecitationScreen({ route, navigation }) {
         : null;
       // Stream the selected qari's melodic recitation (unless playing back the
       // user's own voice). speakArabic falls back to device TTS if it can't load.
-      const audioUrl = useCustomVoice ? null : getAyahAudioUrl(reciter, surahRef.current.id, ayah.number);
+      const sId = surahRef.current.id;
+      const audioUrl = useCustomVoice ? null : getAyahAudioUrl(reciter, sId, ayah.number);
       const arOpts = { useCustomVoice, customVoiceUri, audioUrl };
+      // Real human English narration (Sahih International) matching the on-screen
+      // text; speakTranslation falls back to device TTS if it can't stream.
+      const enOpts = { audioUrl: getTranslationAudioUrl(sId, ayah.number) };
 
       if (recitationLanguage === 'arabic' || (useCustomVoice && customVoiceUri)) {
         await speakArabic(ayah.arabic, ayah.words || [], arOpts);
       } else if (recitationLanguage === 'english') {
-        await speakTranslation(ayah.translation, []);
+        await speakTranslation(ayah.translation, [], enOpts);
       } else {
         // Both: recite the Arabic fully first, then the translation.
         // notifyFinish is deferred to the English half so the ayah only
@@ -148,7 +152,7 @@ export default function RecitationScreen({ route, navigation }) {
         const result = await speakArabic(ayah.arabic, ayah.words || [], { ...arOpts, notifyFinish: false });
         if (result?.finished && ayah.translation) {
           await new Promise(res => setTimeout(res, 400));
-          await speakTranslation(ayah.translation, []);
+          await speakTranslation(ayah.translation, [], enOpts);
         }
       }
     } catch (e) {

@@ -460,7 +460,7 @@ export default function VoiceSettingsScreen({ navigation }) {
         {activeSection === 'lang' && (
           <View style={[styles.section, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
             <Text style={[styles.sectionDesc, { color: theme.textMuted, marginBottom: 12 }]}>
-              Choose the language used when the app reads ayahs aloud.
+              Choose the language used when the app reads ayahs aloud. Arabic uses your chosen reciter; English is narrated by Ibrahim Walk (Sahih International).
             </Text>
             <View style={styles.speedRow}>
               {[

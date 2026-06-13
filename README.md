@@ -14,7 +14,8 @@ Arabian visual language — emerald, gold, and warm sand, with eight-point star
 
 ## Features
 
-- 🎙️ **Authentic melodic recitation** — streams real verse-by-verse audio from renowned reciters (Alafasy, Abdul Basit, Al-Husary, Al-Minshawi, Al-Sudais, Al-Ghamdi). Falls back to the device's standard Arabic (ar-SA) voice when offline. English translation playback and an Arabic-then-English "Both" mode included.
+- 🎙️ **Authentic melodic recitation** — streams real verse-by-verse audio from renowned reciters (Alafasy, Abdul Basit, Al-Husary, Al-Minshawi, Al-Sudais, Al-Ghamdi). Falls back to the device's standard Arabic (ar-SA) voice when offline.
+- 🗣️ **Narrated English translation** — the Sahih International translation read by a real human narrator (Ibrahim Walk), matching the on-screen text, with an Arabic-then-English "Both" mode. Device TTS is used only as an offline fallback.
 - 📖 **Word-by-word highlighting** with translation and transliteration toggles.
 - 🗣️ **Voice commands** — "next ayah", "pause", "repeat", "go to next surah", and surah/verse navigation.
 - 🎧 **Practice mode** — record your own recitation and play it back.

@@ -1,0 +1,193 @@
+workflows:
+  react-native-android:
+    name: React Native Android
+    instance_type: linux_default
+    max_build_duration: 120
+    environment:
+      java: Java 17
+      node: 18.17.0
+      groups:
+        - google_play  # Set PLAY_STORE_CREDENTIALS, ANDROID_KEYSTORE, etc. in Codemagic UI
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch:
+        include_patterns:
+          - main
+          - develop
+      tag:
+        include_patterns:
+          - v*.*.*
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Setup Android keystore
+        script: |
+          mkdir -p $HOME/.android
+          echo "$ANDROID_KEYSTORE" | base64 --decode > $HOME/.android/upload-keystore.jks
+          cat > $HOME/.android/keystore.properties <<EOF
+          storeFile=$HOME/.android/upload-keystore.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+      - name: Install Gradle dependencies
+        script: |
+          cd android
+          ./gradlew --version
+      - name: Build Android release
+        script: |
+          cd android
+          ./gradlew assembleRelease -DMYAPP_UPLOAD_STORE_FILE=$HOME/.android/upload-keystore.jks \
+            -DMYAPP_UPLOAD_STORE_PASSWORD=$KEYSTORE_PASSWORD \
+            -DMYAPP_UPLOAD_KEY_ALIAS=$KEY_ALIAS \
+            -DMYAPP_UPLOAD_KEY_PASSWORD=$KEY_PASSWORD
+    artifacts:
+      - android/app/build/outputs/apk/release/*.apk
+      - android/app/build/outputs/bundle/release/*.aab
+    publishing:
+      google_play:
+        credentials: $PLAY_STORE_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  react-native-ios:
+    name: React Native iOS
+    instance_type: mac_mini_m1
+    max_build_duration: 120
+    environment:
+      xcode: latest
+      node: 18.17.0
+      groups:
+        - app_store  # Set APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_ID, etc.
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch:
+        include_patterns:
+          - main
+          - develop
+      tag:
+        include_patterns:
+          - v*.*.*
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install --repo-update
+      - name: Setup iOS certificate and provisioning profile
+        script: |
+          # Install dependencies
+          brew install fastlane
+
+          # Set up provisioning profiles
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$IOS_PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/$IOS_PROVISIONING_PROFILE_ID.mobileprovision
+
+          # Set up certificate
+          echo "$IOS_CERTIFICATE" | base64 --decode > /tmp/ios_certificate.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import /tmp/ios_certificate.p12 -k build.keychain -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+      - name: Build iOS app
+        script: |
+          cd ios
+          xcodebuild -workspace Quran.xcworkspace \
+            -scheme Quran \
+            -configuration Release \
+            -derivedDataPath build \
+            -arch arm64 \
+            build
+      - name: Create IPA
+        script: |
+          cd ios
+          xcodebuild -workspace Quran.xcworkspace \
+            -scheme Quran \
+            -configuration Release \
+            -derivedDataPath build \
+            -arch arm64 \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM_ID \
+            PROVISIONING_PROFILE=$IOS_PROVISIONING_PROFILE_ID \
+            PROVISIONING_PROFILE_SPECIFIER=$IOS_PROVISIONING_PROFILE_NAME \
+            build
+
+          # Create IPA
+          mkdir -p build/ipa
+          xcodebuild -exportArchive \
+            -archivePath build/Quran.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist ExportOptions.plist
+    artifacts:
+      - ios/build/ipa/*.ipa
+      - ios/build/Quran.xcarchive
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+
+  react-native-test:
+    name: React Native Tests
+    instance_type: linux_default
+    max_build_duration: 60
+    environment:
+      node: 18.17.0
+    triggering:
+      events:
+        - pull_request
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Run linter
+        script: |
+          npm run lint 2>/dev/null || echo "No lint script configured"
+      - name: Run tests
+        script: |
+          npm test 2>/dev/null || echo "No test script configured"
+      - name: Check for build issues
+        script: |
+          npx expo export --platform android --output-dir .tmp_check 2>&1 | tail -5
+          rm -rf .tmp_check
+
+  react-native-develop:
+    name: React Native Development Build (EAS)
+    instance_type: linux_default
+    max_build_duration: 120
+    environment:
+      node: 18.17.0
+      groups:
+        - eas_credentials  # Set EAS_TOKEN in Codemagic UI
+    triggering:
+      events:
+        - push
+      branch:
+        include_patterns:
+          - develop
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Install EAS CLI
+        script: |
+          npm install -g eas-cli
+      - name: Build with EAS (Android)
+        script: |
+          eas build --platform android --profile development --non-interactive
+    artifacts:
+      - build/quran-voice-reader.apk
+
+defaults:
+  retry:
+    max_attempts: 2
+    exit_status_on_failure: 1

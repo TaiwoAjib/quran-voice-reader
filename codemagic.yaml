@@ -12,9 +12,13 @@ workflows:
       events:
         - push
         - pull_request
-      branches:
-        - main
-        - develop
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+        - pattern: develop
+          include: true
+          source: true
     scripts:
       - name: Install npm dependencies
         script: npm install
@@ -48,9 +52,13 @@ workflows:
       events:
         - push
         - pull_request
-      branches:
-        - main
-        - develop
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+        - pattern: develop
+          include: true
+          source: true
     scripts:
       - name: Install npm dependencies
         script: npm install

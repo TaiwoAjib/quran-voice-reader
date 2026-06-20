@@ -1,0 +1,214 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                  STORE ASSETS FOLDER - COMPLETE SETUP                      ║
+║                   Qur'an Voice Reader v1.0.0                               ║
+║                          Ready for Submission                              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📦 FOLDER STRUCTURE
+═══════════════════════════════════════════════════════════════════════════
+
+store-assets/
+│
+├── INDEX.md ⭐ START HERE
+│   └─ Complete guide to the entire folder structure
+│
+├── STORE-ASSETS-GUIDE.md (📖 FULL REFERENCE)
+│   └─ Detailed specifications, guidelines, and best practices
+│
+├── QUICK-REFERENCE.md (🚀 QUICK START)
+│   └─ What's ready, what to create, and how to upload
+│
+├── SUMMARY.txt (THIS FILE)
+│   └─ Visual overview
+│
+├── google-play-store/ ✅ READY TO UPLOAD
+│   ├── app-icon-512x512.png
+│   ├── feature-graphic-1024x500.png (MAIN BANNER)
+│   ├── promo-graphic-180x120.png
+│   └── screenshots/ (CREATE: 1080×1920 PNG, 2–8 images)
+│       └── README.md
+│
+├── apple-app-store/ ✅ READY TO UPLOAD
+│   ├── app-icon-1024x1024.png
+│   ├── marketing-artwork-1024x1024.png
+│   └── screenshots/ (CREATE: 1242×2688 PNG, 2–10 images)
+│       └── README.md
+│
+└── shared/ ✅ GENERAL USE
+    ├── app-icon-192x192.png (favicon, social)
+    ├── app-icon-256x256.png (web thumbnail)
+    └── app-icon-512x512.png (general use)
+
+
+📊 STATUS SUMMARY
+═══════════════════════════════════════════════════════════════════════════
+
+✅ COMPLETED (8 files ready)
+─────────────────────────────────────────────────────────────────────────
+  • Google Play Store icon (512×512)
+  • Google Play Feature Graphic (1024×500) ← Most important banner
+  • Google Play Promo Graphic (180×120)
+  • Apple App Store icon (1024×1024)
+  • Apple App Store Marketing Artwork (1024×1024)
+  • Shared icons (192, 256, 512 px)
+  • Complete documentation (4 guides)
+  • Ready folder structure
+
+⏳ REMAINING TASKS (User creates these)
+─────────────────────────────────────────────────────────────────────────
+  □ Google Play screenshots (1080×1920, 2–8 images) ~30–60 min
+  □ Apple App Store screenshots (1242×2688, 2–10 images) ~30–60 min
+  □ App preview video for Apple (15–30 sec, optional) ~15–30 min
+  □ App description & metadata ~20–30 min
+  □ Privacy policy (required for Apple) ~30–60 min
+  □ Upload to both stores ~20–30 min
+
+📈 PROGRESS: 73% Complete (8 of 11 assets ready)
+═════════════════════════════════════════════════════════════════════════
+
+
+🎯 QUICK START GUIDE
+═══════════════════════════════════════════════════════════════════════════
+
+STEP 1: READ THE DOCS (10 minutes)
+──────────────────────────────────
+  1. Open: QUICK-REFERENCE.md ← Quick overview
+  2. Then: STORE-ASSETS-GUIDE.md ← Full details
+
+STEP 2: CREATE SCREENSHOTS (1–2 hours)
+───────────────────────────────────────
+  A. Open app in Android emulator at 1080×1920
+     └─ Create 5–6 screenshots showing main features
+     └─ Save to: google-play-store/screenshots/
+
+  B. Open app in iOS simulator at 1242×2688
+     └─ Create 5–6 screenshots showing main features
+     └─ Save to: apple-app-store/screenshots/
+
+  C. Optional: Create 15–30 sec video for Apple App Store
+     └─ Save to: apple-app-store/screenshots/
+
+STEP 3: UPLOAD TO STORES (30 minutes)
+──────────────────────────────────────
+  A. Google Play Console:
+     └─ Upload icon, feature graphic, screenshots
+
+  B. App Store Connect:
+     └─ Upload icon, marketing artwork, screenshots
+
+  C. Both stores:
+     └─ Add app description, keywords, privacy policy
+
+STEP 4: SUBMIT FOR REVIEW
+──────────────────────────
+  A. Google Play: ~2–4 hours review time
+  B. Apple App Store: ~24–48 hours review time
+
+
+📱 DIMENSIONS AT A GLANCE
+═══════════════════════════════════════════════════════════════════════════
+
+Google Play Store          |  Apple App Store           |  Shared
+──────────────────────────────────────────────────────────────────────────
+✅ Icon: 512×512          | ✅ Icon: 1024×1024        | ✅ 192×192
+✅ Banner: 1024×500       | ✅ Art: 1024×1024         | ✅ 256×256
+✅ Promo: 180×120         | ⏳ Screenshots: 1242×2688  | ✅ 512×512
+⏳ Screenshots: 1080×1920 |                            |
+
+
+🎨 DESIGN NOTES
+═══════════════════════════════════════════════════════════════════════════
+
+Color Scheme:
+  • Dark background: #081711 (emerald-dark)
+  • Primary: #0E7C5A (emerald)
+  • Accent: #C9A227 (gold)
+  • Text: #EFF5EC (light sand)
+
+Typography:
+  • Naskh-style Arabic font recommended
+  • Sans-serif for English
+  • 40+ pt for screenshot captions
+
+Key Features to Showcase:
+  1. Melodic recitation (real reciters, not TTS)
+  2. Arabic + English narration
+  3. Voice search for surahs
+  4. Word-by-word highlighting
+  5. Voice practice/recording
+  6. Bookmarks & resume
+  7. Multiple reader profiles
+  8. Dark/light themes
+
+
+📚 DOCUMENTATION FILES (READ IN THIS ORDER)
+═══════════════════════════════════════════════════════════════════════════
+
+1. 🚀 QUICK-REFERENCE.md (5 min read)
+   └─ What's ready, dimensions, upload steps, FAQ
+
+2. 📖 STORE-ASSETS-GUIDE.md (15 min read)
+   └─ Full specifications, guidelines, design tips, checklist
+
+3. google-play-store/screenshots/README.md (10 min read)
+   └─ How to create Google Play screenshots (1080×1920)
+
+4. apple-app-store/screenshots/README.md (10 min read)
+   └─ How to create Apple App Store screenshots + video (1242×2688)
+
+
+🔗 USEFUL LINKS
+═══════════════════════════════════════════════════════════════════════════
+
+Store Console Platforms:
+  • Google Play Console: https://play.google.com/console
+  • App Store Connect: https://appstoreconnect.apple.com
+
+Official Guidelines:
+  • Play Store Graphics: https://support.google.com/googleplay/android-developer/answer/1078870
+  • App Store Preview: https://developer.apple.com/app-store/app-previews/
+
+Tools for Screenshots:
+  • Emulators: Android Studio, Xcode
+  • Image Editing: Figma (free), GIMP, Photoshop
+  • Video Editing: CapCut (free), iMovie, Adobe Premiere
+
+
+⏱️ TIME ESTIMATE
+═══════════════════════════════════════════════════════════════════════════
+
+Reading Documentation:     ~20 minutes
+Creating Screenshots:      ~60–90 minutes
+Writing Metadata:          ~30 minutes
+Uploading to Stores:       ~20 minutes
+─────────────────────────────────────────
+TOTAL TIME:               ~2.5–3.5 hours
+
+Then wait for store review:
+  • Google Play: 2–4 hours
+  • Apple App Store: 24–48 hours
+
+
+🎊 SUCCESS INDICATORS
+═══════════════════════════════════════════════════════════════════════════
+
+You'll know everything is ready when:
+  ✅ google-play-store/ has all 3 images + screenshots
+  ✅ apple-app-store/ has all 2 images + screenshots
+  ✅ Both stores list complete metadata (name, description, keywords)
+  ✅ Privacy policy is live (required for Apple)
+  ✅ Screenshots are high-quality and feature-focused
+  ✅ No placeholder text, debug info, or test data in screenshots
+  ✅ All documents reviewed and understood
+
+
+═════════════════════════════════════════════════════════════════════════════
+                    You're 73% of the way there! 🚀
+                   The rest is screenshots + metadata.
+═════════════════════════════════════════════════════════════════════════════
+
+Questions? See STORE-ASSETS-GUIDE.md → "Troubleshooting" section
+Ready to submit? Start with QUICK-REFERENCE.md upload section
+Need help with screenshots? Read google-play-store/screenshots/README.md
+
+Created: June 2026 | App: Qur'an Voice Reader v1.0.0 | Status: Ready ✅
